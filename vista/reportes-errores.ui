@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1300</width>
+    <height>820</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">.QPushButton{
+	color: rgb(0, 0, 127);
+	background-color: rgb(255,255,255);
+	border-radius:15;
+
+}
+.QPushButton:hover{
+	background-color:#c4c4c4;
+	color:black;
+}
+
+[name = fondoErrores]{
+	background-image: url(&quot;C:\Users\aimbe\Downloads\Recurso 6-100\&quot;)
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>1310</width>
+      <height>820</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Tab 1</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Reporte de errores</string>
+     </attribute>
+     <widget class="QFrame" name="fondoErrores">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1311</width>
+        <height>791</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <widget class="QLabel" name="label">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>1310</width>
+         <height>820</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/Recurso 6-100.jpg</pixmap>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_2">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>30</y>
+         <width>631</width>
+         <height>291</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/carro.png</pixmap>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_3">
+       <property name="geometry">
+        <rect>
+         <x>1040</x>
+         <y>450</y>
+         <width>451</width>
+         <height>311</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/moto.png</pixmap>
+       </property>
+      </widget>
+      <widget class="QListView" name="listArchivos">
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>360</y>
+         <width>256</width>
+         <height>351</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(255,255,255);
+border-radius:15;</string>
+       </property>
+      </widget>
+      <widget class="QTableView" name="tblTablaErrores">
+       <property name="geometry">
+        <rect>
+         <x>440</x>
+         <y>360</y>
+         <width>751</width>
+         <height>351</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(255,255,255);
+border-radius:15;
+
+</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnVerObservaciones">
+       <property name="geometry">
+        <rect>
+         <x>140</x>
+         <y>240</y>
+         <width>211</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>Al dar clic, podrá observar las observaciones que tienen los tramos de manera resumida en la tabla </string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>Ver observaciones</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/ver-observaciones.png</normaloff>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/ver-observaciones.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>50</width>
+         <height>50</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnSeleccionarArchivo">
+       <property name="geometry">
+        <rect>
+         <x>520</x>
+         <y>240</y>
+         <width>211</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>Seleccione un solo archivo excel que desee validar, en la tabla se presentará un resumen de los errores</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>Seleccionar archivo</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/archivos.png</normaloff>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/archivos.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>50</width>
+         <height>50</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnSeleccionarCarpeta">
+       <property name="geometry">
+        <rect>
+         <x>850</x>
+         <y>240</y>
+         <width>211</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>Seleccione una carpeta que contenga archivos excel para validarlos</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>Seleccionar carpeta</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/seleccionar-carpteta.png</normaloff>../Escritorio/6to ciclo/Proyecto-Verificacion-Validacion-Datos/seleccionar-carpteta.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>50</width>
+         <height>50</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_4">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>120</y>
+         <width>471</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>22</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: rgb(255, 255, 255);</string>
+       </property>
+       <property name="text">
+        <string> REPORTES DE ERRORES</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblArchivos">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>320</y>
+         <width>231</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_6">
+       <property name="geometry">
+        <rect>
+         <x>670</x>
+         <y>780</y>
+         <width>231</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_7">
+       <property name="geometry">
+        <rect>
+         <x>620</x>
+         <y>780</y>
+         <width>231</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+      <zorder>label</zorder>
+      <zorder>listArchivos</zorder>
+      <zorder>label_3</zorder>
+      <zorder>btnSeleccionarCarpeta</zorder>
+      <zorder>label_2</zorder>
+      <zorder>btnVerObservaciones</zorder>
+      <zorder>label_4</zorder>
+      <zorder>tblTablaErrores</zorder>
+      <zorder>btnSeleccionarArchivo</zorder>
+      <zorder>lblArchivos</zorder>
+      <zorder>label_6</zorder>
+      <zorder>label_7</zorder>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
