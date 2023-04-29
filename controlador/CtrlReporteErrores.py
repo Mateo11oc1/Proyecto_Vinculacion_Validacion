@@ -136,7 +136,7 @@ class Controlador(QWidget):
                 tabla.setItem(i,2,QStandardItem(str(archivosConObservaciones[i]["observaciones"])))
                 tabla.setItem(i,3,QStandardItem(str(archivosConObservaciones[i]["tramo"])))
                 tabla.setItem(i,4,QStandardItem(str(archivosConObservaciones[i]["zona"])))
-                tabla.setItem(i,5,QStandardItem(str(archivosConObservacion[i]["grupo"])))
+                tabla.setItem(i,5,QStandardItem(str(archivosConObservaciones[i]["grupo"])))
 
             self.vista.ui.tblTablaErrores.resizeColumnsToContents()
             self.vista.ui.tblTablaErrores.resizeRowsToContents()
