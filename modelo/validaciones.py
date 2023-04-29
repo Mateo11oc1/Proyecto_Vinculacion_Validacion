@@ -49,7 +49,6 @@ class Validaciones:
         for i in self.archivos_excel:
             #Leo todas las hojas de una vez del documento
             
-            print("archivo: " + i)
             leido = pandas.read_excel(i, sheet_name = None)
             numHoja = 0
             #Recorro cada hoja
