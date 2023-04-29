@@ -24,9 +24,9 @@ import openpyxl
 class Validaciones:
 
     def __init__(self):
-        pass
+        
         # self.carpetaExcel = "../"
-        # self.archivos_excel = self.leerCarpeta()
+        self.archivos_excel = []
 
 
     #Obtengo una lista de todos lo archivos excel
@@ -42,8 +42,8 @@ class Validaciones:
     #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
     def leerColumna(self, opcion)->list:
         self.listaColumnas = []
-        self.columnasConErrores=[]
-        self.archivoConObservaciones=[]
+        self.columnasConErrores = []
+        self.archivoConObservaciones = []
         #Recorro todos los archivos
         print(self.archivos_excel)
         for i in self.archivos_excel:
@@ -57,7 +57,7 @@ class Validaciones:
                 #Recorro cada columna
                 #shape[1] nos da el numero de columnas de la hoja
                 
-                archivo={"hoja":numHoja, "archivo":i,"grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],"observaciones":j.iloc[30,1]}
+                archivo={"hoja":numHoja, "archivoNombre":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],"observaciones":j.iloc[30,1]}
                 if opcion=='observaciones':
                         #Si las observaciones no estan vacias
                         if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
@@ -69,14 +69,14 @@ class Validaciones:
                     lista = j.iloc[7:, h].values.tolist()
                     
                     columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
-                            "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivo": i, "vacia":False, "listaErrores":{},
-                            "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],"observaciones":j.iloc[30,1]}
+                            "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
+                            "vacia":False, "listaErrores":{}, "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],"observaciones":j.iloc[30,1]}
                     #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
-                    if opcion=='errores':
+                    if opcion == "errores":
                         columna = self.validar(columna) #Se valida que la columna esta vacia al leer
 
                         if columna != None: #si la columna no esta vacia se agrega a la lista de columnas
-                            print(f'---------\nArchivo: {columna["archivo"]}\n Hoja: {columna["hoja"]}\n Columna: {columna["numColumna"]}')
+                            print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["hoja"]}\n Columna: {columna["numColumna"]}')
                             #print(columna)
                             self.listaColumnas.append(columna)
                             for k in columna:
@@ -183,10 +183,10 @@ class Validaciones:
         #si el numero de atractores es nulo
 
         if math.isnan(columna["numAtractores"]):
-            workbook = openpyxl.load_workbook(columna["archivo"])
+            workbook = openpyxl.load_workbook(columna["archivoRuta"])
             hojaLeida = workbook.worksheets[columna["hoja"]]
             hojaLeida.cell(row = 11, column = columna["numColumna"]+1).value=sum(x for x in columna['tamanio'] if not math.isnan(x))
-            workbook.save(columna["archivo"])
+            workbook.save(columna["archivoRuta"])
 
     #Valida que los datos de jornada, no estan vacios
     def validarJornadaDatosVacios(self, columna: dict) -> list:
@@ -237,13 +237,13 @@ class Validaciones:
         if not math.isnan(sum(x for x in columna["jornada"] if not math.isnan(x))):
 
             if not math.isnan(columna["jornada"][0]) and not math.isnan(columna["jornada"][1]) and columna["jornada"][0] == columna["numAtractores"] and columna["jornada"][1] == columna["numAtractores"]:
-                workbook = openpyxl.load_workbook(columna["archivo"])
+                workbook = openpyxl.load_workbook(columna["archivoRuta"])
                 hojaLeida = workbook.worksheets[columna["hoja"]]
                 #las filas 17, 15 y 16 corresponden a los datos diurno, vespertino y matutino
                 hojaLeida.cell(row = 17, column = columna["numColumna"] + 1).value = columna["numAtractores"]
                 hojaLeida.cell(row = 15, column = columna["numColumna"] + 1).value = ""
                 hojaLeida.cell(row = 16, column = columna["numColumna"] + 1).value = ""
-                workbook.save(columna["archivo"])
+                workbook.save(columna["archivoRuta"])
 
     #Valida que los datos de dias, no estan vacios
     def validarDiasDatosVacios(self, columna: dict) -> list:
