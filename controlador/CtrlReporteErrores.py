@@ -45,7 +45,7 @@ class Controlador(QWidget):
         self.vista.move(x, y)
 
     def buscarCarpeta(self):
-
+        self.vista.ui.tblTablaErrores.setModel(None)
         self.carpeta = QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         if self.carpeta and os.path.isdir(self.carpeta):
             if self.tabla is not None:
@@ -127,6 +127,7 @@ class Controlador(QWidget):
 
 
     def verObservaciones(self):
+        self.vista.ui.tblTablaErrores.setModel(None)
         self.tabla = QStandardItemModel()
         self.carpetaObservaciones= QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         if self.carpetaObservaciones and os.path.isdir(self.carpetaObservaciones):
@@ -151,6 +152,7 @@ class Controlador(QWidget):
             self.vista.ui.tblTablaErrores.resizeRowsToContents()
 
     def seleccionarArchivo(self):
+        self.vista.ui.tblTablaErrores.setModel(None)
         self.archivo, ok = QFileDialog.getOpenFileName(self, "Seleccionar archivo", r"<Default dir>", "Archivos excel (*.xlsx)")
 
         if ok:
