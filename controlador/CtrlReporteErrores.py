@@ -48,10 +48,14 @@ class Controlador(QWidget):
 
         self.carpeta = QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         if self.carpeta and os.path.isdir(self.carpeta):
+            if self.tabla is not None:
+                pass
+                #vaciar la tabla
+
             self.setCabeceras()
             self.modelo.leerCarpeta(self.carpeta)
 
-            columnasConErrores = self.modelo.leerColumna('errores')
+            columnasConErrores = self.modelo.leerColumna()
 
             # self.loading=LoadingWidget()
             # self.loading.show()
@@ -62,7 +66,7 @@ class Controlador(QWidget):
 
             for i in range(len(columnasConErrores)):
                 self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
-                self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["hoja"])))
+                self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))
                 self.tabla.setItem(i,2,QStandardItem(str(columnasConErrores[i]["numColumna"])))
                 self.tabla.setItem(i,3,QStandardItem(str(columnasConErrores[i]["atractor"])))
                 self.tabla.setItem(i,4,QStandardItem(str(self.detalleErrores(columnasConErrores[i]["listaErrores"]))))
@@ -109,7 +113,7 @@ class Controlador(QWidget):
 
     def setCabeceras(self):
         self.tabla = QStandardItemModel()
-        self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Número de hoja", "Numero de columna", "Atractor", "Detalle", "Tramo", "Zona", "Grupo"])
+        self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja", "Numero de columna", "Atractor", "Detalle", "Tramo", "Zona", "Grupo"])
         self.vista.ui.tblTablaErrores.setModel(self.tabla)
         cabecera = self.vista.ui.tblTablaErrores.horizontalHeader()
         # cabecera.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
@@ -126,20 +130,22 @@ class Controlador(QWidget):
         self.tabla = QStandardItemModel()
         self.carpetaObservaciones= QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         if self.carpetaObservaciones and os.path.isdir(self.carpetaObservaciones):
-            self.modelo.leerCarpeta(self.carpetaObservaciones)
+            if self.tabla is not None:
+                pass
+                #vaciar la tabla
 
-            archivosConObservaciones = self.modelo.leerColumna('observaciones')
-            self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Número de hoja",  "Observaciones", "Tramo", "Zona", "Grupo"])
+            self.modelo.leerCarpeta(self.carpetaObservaciones)
+            archivos = self.modelo.verObservacionesArchivos()
+            self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja",  "Observaciones", "Tramo", "Zona", "Grupo"])
             self.vista.ui.tblTablaErrores.setModel(self.tabla)
 
-            for i in range(len(archivosConObservaciones)):
-                self.tabla.setItem(i,0,QStandardItem(str(archivosConObservaciones[i]["archivoNombre"])))
-                self.tabla.setItem(i,1,QStandardItem(str(archivosConObservaciones[i]["hoja"])))
-                self.tabla.setItem(i,1,QStandardItem(str(archivosConObservaciones[i]["numColumna"])))
-                self.tabla.setItem(i,2,QStandardItem(str(archivosConObservaciones[i]["observaciones"])))
-                self.tabla.setItem(i,3,QStandardItem(str(archivosConObservaciones[i]["tramo"])))
-                self.tabla.setItem(i,4,QStandardItem(str(archivosConObservaciones[i]["zona"])))
-                self.tabla.setItem(i,5,QStandardItem(str(archivosConObservaciones[i]["grupo"])))
+            for i in range(len(archivos)):
+                self.tabla.setItem(i,0,QStandardItem(str(archivos[i]["archivoNombre"])))
+                self.tabla.setItem(i,1,QStandardItem(str(archivos[i]["nombreHoja"])))
+                self.tabla.setItem(i,2,QStandardItem(str(archivos[i]["observaciones"])))
+                self.tabla.setItem(i,3,QStandardItem(str(archivos[i]["tramo"])))
+                self.tabla.setItem(i,4,QStandardItem(str(archivos[i]["zona"])))
+                self.tabla.setItem(i,5,QStandardItem(str(archivos[i]["grupo"])))
 
             self.vista.ui.tblTablaErrores.resizeColumnsToContents()
             self.vista.ui.tblTablaErrores.resizeRowsToContents()
@@ -148,14 +154,16 @@ class Controlador(QWidget):
         self.archivo, ok = QFileDialog.getOpenFileName(self, "Seleccionar archivo", r"<Default dir>", "Archivos excel (*.xlsx)")
 
         if ok:
-
+            if self.tabla is not None:
+                pass
+                #vaciar la tabla
             self.setCabeceras()
             self.modelo.archivos_excel = [self.archivo]
-            columnasConErrores = self.modelo.leerColumna('errores')
+            columnasConErrores = self.modelo.leerColumna()
 
             for i in range(len(columnasConErrores)):
                 self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
-                self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["hoja"])))
+                self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))
                 self.tabla.setItem(i,2,QStandardItem(str(columnasConErrores[i]["numColumna"])))
                 self.tabla.setItem(i,3,QStandardItem(str(columnasConErrores[i]["atractor"])))
                 self.tabla.setItem(i,4,QStandardItem(str(self.detalleErrores(columnasConErrores[i]["listaErrores"]))))

@@ -33,16 +33,10 @@ class Validaciones:
     def leerCarpeta(self, carpeta):
         # Obtener todos los archivos en la carpeta que tengan la extensión .xlsx
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
-        for i in self.archivos_excel:
-            print("hola" + i)
+         
             
-        
-
-    #Devuelve la columna como un diccionario de acuerdo a los parametros
-    #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
-    def leerColumna(self, opcion)->list:
+    def verObservacionesArchivos(self)->list:
         self.listaColumnas = []
-        self.columnasConErrores = []
         self.archivoConObservaciones = []
         #Recorro todos los archivos
         print(self.archivos_excel)
@@ -50,28 +44,56 @@ class Validaciones:
             #Leo todas las hojas de una vez del documento
             
             leido = pandas.read_excel(i, sheet_name = None)
+           
             numHoja = 0
             #Recorro cada hoja
-            for j in leido.values():
+            for nombreHoja, j in leido.items():
                 #Recorro cada columna
                 #shape[1] nos da el numero de columnas de la hoja
                 
-                archivo={"hoja":numHoja, "archivoNombre":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],"observaciones":j.iloc[30,1]}
-                if opcion=='observaciones':
-                        #Si las observaciones no estan vacias
-                        if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
-                            self.archivoConObservaciones.append(archivo)
+                archivo={"hoja":numHoja, "archivoNombre":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
+                         "observaciones":j.iloc[30,1], "nombreHoja":nombreHoja}
+                #Si las observaciones no estan vacias
+                if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
+                    self.archivoConObservaciones.append(archivo)
 
-                for h in range(2, j.shape[1]):
-                    #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor,
-                    # numero,dias,jornada, tamanio)
-                    lista = j.iloc[7:, h].values.tolist()
-                    
-                    columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
-                            "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
-                            "vacia":False, "listaErrores":{}, "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],"observaciones":j.iloc[30,1]}
-                    #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
-                    if opcion == "errores":
+                numHoja += 1
+       
+        return self.archivoConObservaciones
+ 
+
+    #Devuelve la columna como un diccionario de acuerdo a los parametros
+    #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
+    def leerColumna(self)->list:
+        self.listaColumnas = []
+        self.columnasConErrores = []
+      
+        #Recorro todos los archivos
+        print(self.archivos_excel)
+        for i in self.archivos_excel:
+            #Leo todas las hojas de una vez del documento
+            
+            try:
+                leido = pandas.read_excel(i, sheet_name = None)
+                numHoja = 0
+            except Exception as e:
+                print(f"Error al leer el archivo {leido}")
+            #Recorro cada hoja
+            for nombreHoja,j in leido.items():
+                #Recorro cada columna
+                #shape[1] nos da el numero de columnas de la hoja
+                try:
+                    for h in range(2, j.shape[1]):
+                        #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor,
+                        # numero,dias,jornada, tamanio)
+                        lista = j.iloc[7:, h].values.tolist()
+                        
+                        columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
+                                "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
+                                "vacia":False, "listaErrores":{}, "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
+                                "observaciones":j.iloc[30,1], "nombreHoja": nombreHoja}
+                        #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
+                        
                         columna = self.validar(columna) #Se valida que la columna esta vacia al leer
 
                         if columna != None: #si la columna no esta vacia se agrega a la lista de columnas
@@ -87,13 +109,14 @@ class Validaciones:
                                     
                                 break
                     
-
+                except Exception as e:
+                    print(f"Error en el archivo {os.path.basename(i)}. Hoja: {nombreHoja}: {e}")
 
                 numHoja += 1
-        if opcion=='errores':
-            return self.columnasConErrores
-        elif opcion=='observaciones':
-            return self.archivoConObservaciones
+       
+        return self.columnasConErrores
+        
+      
 
     #Si una columna esta vacia no sera necesario realizar las validaciones
     def validarColVacia(self, columna: dict) -> list:
