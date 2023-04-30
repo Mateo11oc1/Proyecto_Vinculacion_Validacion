@@ -45,12 +45,10 @@ class Controlador(QWidget):
         self.vista.move(x, y)
 
     def buscarCarpeta(self):
-
+        self.vista.ui.tblTablaErrores.setModel(None)
         self.carpeta = QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         if self.carpeta and os.path.isdir(self.carpeta):
-            if self.tabla is not None:
-                pass
-                #vaciar la tabla
+            
 
             self.setCabeceras()
             self.modelo.leerCarpeta(self.carpeta)
@@ -129,11 +127,10 @@ class Controlador(QWidget):
     def verObservaciones(self):
         self.tabla = QStandardItemModel()
         self.carpetaObservaciones= QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
-        if self.carpetaObservaciones and os.path.isdir(self.carpetaObservaciones):
-            if self.tabla is not None:
-                pass
-                #vaciar la tabla
+        self.vista.ui.tblTablaErrores.setModel(None)
 
+        if self.carpetaObservaciones and os.path.isdir(self.carpetaObservaciones):
+            
             self.modelo.leerCarpeta(self.carpetaObservaciones)
             archivos = self.modelo.verObservacionesArchivos()
             self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja",  "Observaciones", "Tramo", "Zona", "Grupo"])
@@ -152,11 +149,9 @@ class Controlador(QWidget):
 
     def seleccionarArchivo(self):
         self.archivo, ok = QFileDialog.getOpenFileName(self, "Seleccionar archivo", r"<Default dir>", "Archivos excel (*.xlsx)")
-
+        self.vista.ui.tblTablaErrores.setModel(None)
         if ok:
-            if self.tabla is not None:
-                pass
-                #vaciar la tabla
+            
             self.setCabeceras()
             self.modelo.archivos_excel = [self.archivo]
             columnasConErrores = self.modelo.leerColumna()

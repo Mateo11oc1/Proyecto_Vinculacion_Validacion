@@ -53,7 +53,7 @@ class Validaciones:
                 numHoja = 0
             except Exception as e:
                 print(f"Error al leer el archivo {i}")
-                time.sleep(5)
+                #time.sleep(5)
             #Recorro cada hoja
             for nombreHoja,j in leido.items():
                 #Recorro cada columna
@@ -87,7 +87,7 @@ class Validaciones:
                     
                 except Exception as e:
                     print(f"Error en el archivo {os.path.basename(i)}. Hoja: {nombreHoja}: {e}")
-                    time.sleep(5)
+                    #time.sleep(5)
 
                 numHoja += 1
             leido = None
@@ -344,6 +344,40 @@ class Validaciones:
             columna["listaErrores"][9] = False
             return [columna, False] #no hay el error
 
+    #esta funcion sirve para el caso de que hayan atractores que tengan marcado lunes, martes, miercoles, jueves y viernes en vez de
+    #entre semana
+    def corregirEntreSemana(self, columna: dict) -> list:
+
+        if not math.isnan(sum(x for x in columna["dias"] if not math.isnan(x))):
+            #si la lista de dias de las posiciones 1 al 5 que contiene los datos de lunes, martes, miercoles jueves y viernes
+            #es igual al numero de atractores
+            if all(dia == columna["numAtractores"]  for dia in columna["dias"][:5]) and all(math.isnan(dia) for dia in columna["dias"][5:]):
+                print("Corrigiendo entre semana...")
+                # abrir el archivo
+                print(columna["archivoRuta"])
+                            
+                # abre la aplicación de Excel en segundo plano
+                app = xlwings.App(visible=False)
+                
+                # abrir el archivo
+                wb = xlwings.Book(columna["archivoRuta"])
+
+                # seleccionar la hoja
+                hoja = wb.sheets[columna["nombreHoja"]]
+
+                # modificar el valor la celda entre semana 
+                hoja.cells(30, columna["numColumna"]+1).value = columna["numAtractores"]
+                hoja.cells(25, columna["numColumna"]+1).value = ""
+                hoja.cells(24, columna["numColumna"]+1).value = ""
+                hoja.cells(23, columna["numColumna"]+1).value = ""
+                hoja.cells(22, columna["numColumna"]+1).value = ""
+                hoja.cells(21, columna["numColumna"]+1).value = ""
+
+                # guarda los cambios y cierra excel
+                wb.save()
+                wb.close()
+                app.quit()
+
     #en esta funcion se llaman a todas las validacione,s optimizando su uso
     def validar(self, columna: dict):
 
@@ -383,7 +417,7 @@ class Validaciones:
                         #verificar que la suma de los tamanios sea igual al numero de atractores
                         sumTamanio = self.validarSumaTamanio(tamanio[0])
                         caracteres[0] = sumTamanio[0]
-                        #self.modificarCampoNAtractores(sumTamanio[0])
+                        self.modificarCampoNAtractores(sumTamanio[0])
 
 
                     jornada = self.validarJornadaDatosVacios(caracteres[0])
@@ -396,11 +430,11 @@ class Validaciones:
                     else:
                         col1 = self.validarSumaJornada(jornada[0])
                         col2 = self.validarJornadaNoSobrepaseAtractores(col1[0])[0]
-                        #self.corregirDiurno(col2) #Se comento porque es muy demorado
+                        self.corregirDiurno(col2) #Se comento porque es muy demorado
 
                     dias = self.validarDiasDatosVacios(col2)
                     if dias[1]:
-                        #si no hay datos en jornada no es necesario realizar las otras validacions de la jornada, por lo cual
+                        #si no hay datos en dias no es necesario realizar las otras validacions de los dias, por lo cual
                         #se ponen las validaciones en False porque no presentaran ese error en concreto
                         dias[0]["listaErrores"][8] = False
                         dias[0]["listaErrores"][9] = False
@@ -408,6 +442,7 @@ class Validaciones:
                     else:
                         colDias = self.validarDiasNoSobrepaseAtractores(dias[0])
                         colRetorno = self.validarSumaDias(colDias[0])[0]
+                        self.corregirEntreSemana(colRetorno)
 
         return colRetorno
 
