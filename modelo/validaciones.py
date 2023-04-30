@@ -5,6 +5,7 @@ import time
 import math
 import logging
 import openpyxl
+import xlwings 
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #diccionario de errores:
 #1. Se han ingresado caracteres o decimales
@@ -27,57 +28,32 @@ class Validaciones:
         
         # self.carpetaExcel = "../"
         self.archivos_excel = []
+        self.workbook = None
 
 
     #Obtengo una lista de todos lo archivos excel
     def leerCarpeta(self, carpeta):
         # Obtener todos los archivos en la carpeta que tengan la extensión .xlsx
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
-         
-            
-    def verObservacionesArchivos(self)->list:
-        self.listaColumnas = []
-        self.archivoConObservaciones = []
-        #Recorro todos los archivos
-        print(self.archivos_excel)
-        for i in self.archivos_excel:
-            #Leo todas las hojas de una vez del documento
-            
-            leido = pandas.read_excel(i, sheet_name = None)
-           
-            numHoja = 0
-            #Recorro cada hoja
-            for nombreHoja, j in leido.items():
-                #Recorro cada columna
-                #shape[1] nos da el numero de columnas de la hoja
-                
-                archivo={"hoja":numHoja, "archivoNombre":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
-                         "observaciones":j.iloc[30,1], "nombreHoja":nombreHoja}
-                #Si las observaciones no estan vacias
-                if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
-                    self.archivoConObservaciones.append(archivo)
-
-                numHoja += 1
-       
-        return self.archivoConObservaciones
- 
+        
 
     #Devuelve la columna como un diccionario de acuerdo a los parametros
     #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
     def leerColumna(self)->list:
         self.listaColumnas = []
         self.columnasConErrores = []
-      
+    
         #Recorro todos los archivos
         print(self.archivos_excel)
         for i in self.archivos_excel:
             #Leo todas las hojas de una vez del documento
-            
             try:
                 leido = pandas.read_excel(i, sheet_name = None)
+                
                 numHoja = 0
             except Exception as e:
-                print(f"Error al leer el archivo {leido}")
+                print(f"Error al leer el archivo {i}")
+                time.sleep(5)
             #Recorro cada hoja
             for nombreHoja,j in leido.items():
                 #Recorro cada columna
@@ -111,12 +87,38 @@ class Validaciones:
                     
                 except Exception as e:
                     print(f"Error en el archivo {os.path.basename(i)}. Hoja: {nombreHoja}: {e}")
+                    time.sleep(5)
 
                 numHoja += 1
-       
+            leido = None
         return self.columnasConErrores
         
-      
+    def verObservacionesArchivos(self)->list:
+        self.listaColumnas = []
+        self.archivoConObservaciones = []
+        #Recorro todos los archivos
+        print(self.archivos_excel)
+        for i in self.archivos_excel:
+            #Leo todas las hojas de una vez del documento
+            
+            leido = pandas.read_excel(i, sheet_name = None)
+        
+            numHoja = 0
+            #Recorro cada hoja
+            for nombreHoja, j in leido.items():
+                #Recorro cada columna
+                #shape[1] nos da el numero de columnas de la hoja
+                
+                archivo={"hoja":numHoja, "archivoNombre":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
+                        "observaciones":j.iloc[30,1], "nombreHoja":nombreHoja}
+                #Si las observaciones no estan vacias
+                if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
+                    self.archivoConObservaciones.append(archivo)
+
+                numHoja += 1
+    
+        return self.archivoConObservaciones
+
 
     #Si una columna esta vacia no sera necesario realizar las validaciones
     def validarColVacia(self, columna: dict) -> list:
@@ -205,10 +207,31 @@ class Validaciones:
         #si el numero de atractores es nulo
 
         if math.isnan(columna["numAtractores"]):
-            workbook = openpyxl.load_workbook(columna["archivoRuta"])
-            hojaLeida = workbook.worksheets[columna["hoja"]]
-            hojaLeida.cell(row = 11, column = columna["numColumna"]+1).value=sum(x for x in columna['tamanio'] if not math.isnan(x))
-            workbook.save(columna["archivoRuta"])
+            print("Corrigiendo numero de atractores...")
+        
+            # abrir el archivo
+            print(columna["archivoRuta"])
+                        
+            # abre la aplicación de Excel en segundo plano
+            app = xlwings.App(visible=False)
+            
+            # abrir el archivo
+            wb = xlwings.Book(columna["archivoRuta"])
+
+            # seleccionar la hoja
+            hoja = wb.sheets[columna["nombreHoja"]]
+
+            # modificar el valor de una celda
+            hoja.cells(11, columna["numColumna"]+1).value = sum(x for x in columna['tamanio'] if not math.isnan(x))
+
+            # guarda los cambios y cierra excel
+            wb.save()
+            wb.close()
+            app.quit()
+
+            
+
+
 
     #Valida que los datos de jornada, no estan vacios
     def validarJornadaDatosVacios(self, columna: dict) -> list:
@@ -255,17 +278,31 @@ class Validaciones:
     #ejemplo:hay 3 atractores que atienen horario matutino y vespertino, se sustituye con 3 atractores que atienden en horario diurno
     def corregirDiurno(self, columna: dict) -> list:
 
-
         if not math.isnan(sum(x for x in columna["jornada"] if not math.isnan(x))):
 
-            if not math.isnan(columna["jornada"][0]) and not math.isnan(columna["jornada"][1]) and columna["jornada"][0] == columna["numAtractores"] and columna["jornada"][1] == columna["numAtractores"]:
-                workbook = openpyxl.load_workbook(columna["archivoRuta"])
-                hojaLeida = workbook.worksheets[columna["hoja"]]
-                #las filas 17, 15 y 16 corresponden a los datos diurno, vespertino y matutino
-                hojaLeida.cell(row = 17, column = columna["numColumna"] + 1).value = columna["numAtractores"]
-                hojaLeida.cell(row = 15, column = columna["numColumna"] + 1).value = ""
-                hojaLeida.cell(row = 16, column = columna["numColumna"] + 1).value = ""
-                workbook.save(columna["archivoRuta"])
+            if columna["jornada"][0] == columna["numAtractores"] and columna["jornada"][1] == columna["numAtractores"]:
+                print("Corrigiendo diurno...")
+                # abrir el archivo
+                print(columna["archivoRuta"])
+                            
+                # abre la aplicación de Excel en segundo plano
+                app = xlwings.App(visible=False)
+                
+                # abrir el archivo
+                wb = xlwings.Book(columna["archivoRuta"])
+
+                # seleccionar la hoja
+                hoja = wb.sheets[columna["nombreHoja"]]
+
+                # modificar el valor de una celda
+                hoja.cells(17, columna["numColumna"]+1).value = sum(x for x in columna['tamanio'] if not math.isnan(x))
+                hoja.cells(15, columna["numColumna"]+1).value = ""
+                hoja.cells(16, columna["numColumna"]+1).value = ""
+
+                # guarda los cambios y cierra excel
+                wb.save()
+                wb.close()
+                app.quit()
 
     #Valida que los datos de dias, no estan vacios
     def validarDiasDatosVacios(self, columna: dict) -> list:
@@ -346,7 +383,7 @@ class Validaciones:
                         #verificar que la suma de los tamanios sea igual al numero de atractores
                         sumTamanio = self.validarSumaTamanio(tamanio[0])
                         caracteres[0] = sumTamanio[0]
-                        self.modificarCampoNAtractores(sumTamanio[0])
+                        #self.modificarCampoNAtractores(sumTamanio[0])
 
 
                     jornada = self.validarJornadaDatosVacios(caracteres[0])
@@ -359,7 +396,7 @@ class Validaciones:
                     else:
                         col1 = self.validarSumaJornada(jornada[0])
                         col2 = self.validarJornadaNoSobrepaseAtractores(col1[0])[0]
-                        self.corregirDiurno(col2) #Se comento porque es muy demorado
+                        #self.corregirDiurno(col2) #Se comento porque es muy demorado
 
                     dias = self.validarDiasDatosVacios(col2)
                     if dias[1]:
