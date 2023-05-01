@@ -278,37 +278,35 @@ class Validaciones:
     #ejemplo:hay 3 atractores que atienen horario matutino y vespertino, se sustituye con 3 atractores que atienden en horario diurno
     def corregirDiurno(self, columna: dict) -> list:
 
-        
-        print(columna["jornada"])
-        time.sleep(5)
-        if columna["jornada"][0] == columna["numAtractores"] and columna["jornada"][1] == columna["numAtractores"]:
-            print("Corrigiendo diurno...")
-            # abrir el archivo
-            print(columna["archivoRuta"])
-                        
-            # abre la aplicación de Excel en segundo plano
-            app = xlwings.App(visible=False)
-            
-            # abrir el archivo
-            wb = xlwings.Book(columna["archivoRuta"])
+        if not math.isnan(sum(x for x in columna["jornada"] if not math.isnan(x))):
+                
+            if not math.isnan(columna["jornada"][0]) and not math.isnan(columna["jornada"][1]) and columna["jornada"][0] == columna["numAtractores"] and columna["jornada"][1] == columna["numAtractores"]:
+                print("Corrigiendo diurno...")
+                # abrir el archivo
+                print(columna["archivoRuta"])
 
-            # seleccionar la hoja
-            hoja = wb.sheets[columna["nombreHoja"]]
+                # abre la aplicación de Excel en segundo plano
+                app = xlwings.App(visible=False)
 
-            # modificar el valor de una celda
-            hoja.cells(17, columna["numColumna"]+1).value = sum(x for x in columna['tamanio'] if not math.isnan(x))
-            hoja.cells(15, columna["numColumna"]+1).value = ""
-            hoja.cells(16, columna["numColumna"]+1).value = ""
+                # abrir el archivo
+                wb = xlwings.Book(columna["archivoRuta"])
 
-            # guarda los cambios y cierra excel
-            wb.save()
-            wb.close()
-            app.quit()
+                # seleccionar la hoja
+                hoja = wb.sheets[columna["nombreHoja"]]
 
+                # modificar el valor de una celda
+                hoja.cells(17, columna["numColumna"]+1).value = sum(x for x in columna['tamanio'] if not math.isnan(x))
+                hoja.cells(15, columna["numColumna"]+1).value = ""
+                hoja.cells(16, columna["numColumna"]+1).value = ""
+
+                # guarda los cambios y cierra excel
+                wb.save()
+                wb.close()
+                app.quit()
+                
+                
     def corregir24horas(self, columna: dict) -> list:
 
-        
-            
         if columna["jornada"][2]==columna["numAtractores"] and columna["jornada"][3]==columna["numAtractores"] and math.isnan(columna["jornada"][0]) and math.isnan(columna["jornada"][1] and math.isnan(columna["jornada"[4]])):
             print("Corrigiendo 24 horas...")
             # abrir el archivo
@@ -332,6 +330,8 @@ class Validaciones:
             wb.save()
             wb.close()
             app.quit()
+            
+            
     #Valida que los datos de dias, no estan vacios
     def validarDiasDatosVacios(self, columna: dict) -> list:
 
