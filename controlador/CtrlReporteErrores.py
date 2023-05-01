@@ -125,6 +125,7 @@ class Controlador(QWidget):
 
 
     def verObservaciones(self):
+        self.vista.ui.tblTablaErrores.setModel(None)
         self.tabla = QStandardItemModel()
         self.carpetaObservaciones= QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         self.vista.ui.tblTablaErrores.setModel(None)
@@ -148,6 +149,7 @@ class Controlador(QWidget):
             self.vista.ui.tblTablaErrores.resizeRowsToContents()
 
     def seleccionarArchivo(self):
+        self.vista.ui.tblTablaErrores.setModel(None)
         self.archivo, ok = QFileDialog.getOpenFileName(self, "Seleccionar archivo", r"<Default dir>", "Archivos excel (*.xlsx)")
         self.vista.ui.tblTablaErrores.setModel(None)
         if ok:
