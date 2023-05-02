@@ -91,6 +91,7 @@ class Validaciones:
 
                 numHoja += 1
             leido = None
+        print(f"Existen {len(self.listaColumnas)} columnas con datos")
         return self.columnasConErrores
         
     def verObservacionesArchivos(self)->list:
@@ -118,7 +119,7 @@ class Validaciones:
 
                     numHoja += 1
                 except Exception as e:
-                    print(f"Error en el archivo {i}. \nHoja: {nombreHoja}")
+                    print(f"Error en el archivo {i}. \nHoja: {nombreHoja} {e}")
     
         return self.archivoConObservaciones
 
@@ -232,9 +233,6 @@ class Validaciones:
             wb.close()
             app.quit()
 
-            
-
-
 
     #Valida que los datos de jornada, no estan vacios
     def validarJornadaDatosVacios(self, columna: dict) -> list:
@@ -264,6 +262,7 @@ class Validaciones:
             columna["listaErrores"][5] = False
             return [columna, False] #no hay el error
 
+
     #Validar que uno o varios de los datos de la jornada no sobrepase el numero de atractores
     #No se valida que esto se cumpla con la suma de los datos de la jornada debido a que se puede tener un atractor
     #que sea matutino y nocturno a la vez
@@ -275,6 +274,7 @@ class Validaciones:
 
         columna["listaErrores"][6] = False
         return [columna, False]
+
 
     #En caso de que este marcado matutino y vespertino y sea igual al numero de atractores total, se marca en el archivo como diurno
     #Se borra en matutimo y vespertino
@@ -307,9 +307,6 @@ class Validaciones:
                 wb.close()
                 app.quit()
                 
-                
- 
-            
             
     #Valida que los datos de dias, no estan vacios
     def validarDiasDatosVacios(self, columna: dict) -> list:
@@ -340,6 +337,7 @@ class Validaciones:
         columna["listaErrores"][8] = False
         return [columna, False]
 
+
     #Validar que la suma de todos los datos en dias no sea menor al numero de atractores
     def validarSumaDias(self, columna:dict) -> list:
 
@@ -350,6 +348,7 @@ class Validaciones:
         else:
             columna["listaErrores"][9] = False
             return [columna, False] #no hay el error
+
 
     #esta funcion sirve para el caso de que hayan atractores que tengan marcado lunes, martes, miercoles, jueves y viernes en vez de
     #entre semana
@@ -384,6 +383,7 @@ class Validaciones:
                 wb.save()
                 wb.close()
                 app.quit()
+
 
     #en esta funcion se llaman a todas las validacione,s optimizando su uso
     def validar(self, columna: dict):
@@ -438,7 +438,7 @@ class Validaciones:
                         col1 = self.validarSumaJornada(jornada[0])
                         col2 = self.validarJornadaNoSobrepaseAtractores(col1[0])[0]
                         self.corregirDiurno(col2) #Se comento porque es muy demorado
-                       
+                    
 
                     dias = self.validarDiasDatosVacios(col2)
                     if dias[1]:
@@ -456,5 +456,3 @@ class Validaciones:
 
 
 
-# validaciones = Validaciones()
-# validaciones.leerColumna()
