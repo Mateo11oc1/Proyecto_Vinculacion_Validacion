@@ -2,7 +2,7 @@ import sys
 import tkinter as tk
 
 
-from PyQt6.QtWidgets import QWidget, QFileDialog, QApplication
+from PyQt6.QtWidgets import QWidget, QFileDialog, QApplication, QMessageBox
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QScreen
 
@@ -52,7 +52,9 @@ class Controlador(QWidget):
 
             self.setCabeceras()
             self.modelo.leerCarpeta(self.carpeta)
-
+            mensaje=QMessageBox()
+            mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
+            mensaje.exec()
             columnasConErrores = self.modelo.leerColumna()
 
             # self.loading=LoadingWidget()
@@ -133,6 +135,9 @@ class Controlador(QWidget):
         if self.carpetaObservaciones and os.path.isdir(self.carpetaObservaciones):
             
             self.modelo.leerCarpeta(self.carpetaObservaciones)
+            #mensaje=QMessageBox()
+            #mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
+            #mensaje.exec()
             archivos = self.modelo.verObservacionesArchivos()
             self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja",  "Observaciones", "Tramo", "Zona", "Grupo"])
             self.vista.ui.tblTablaErrores.setModel(self.tabla)

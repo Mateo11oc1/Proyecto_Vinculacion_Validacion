@@ -100,22 +100,25 @@ class Validaciones:
         print(self.archivos_excel)
         for i in self.archivos_excel:
             #Leo todas las hojas de una vez del documento
-            
-            leido = pandas.read_excel(i, sheet_name = None)
-        
+            try:
+                leido = pandas.read_excel(i, sheet_name = None)
+            except Exception as e:
+                print(f"Error en el archivo {i}")
             numHoja = 0
             #Recorro cada hoja
             for nombreHoja, j in leido.items():
                 #Recorro cada columna
                 #shape[1] nos da el numero de columnas de la hoja
-                
-                archivo={"hoja":numHoja, "archivoNombre":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
+                try:
+                    archivo={"hoja":numHoja, "archivoNombre":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
                         "observaciones":j.iloc[30,1], "nombreHoja":nombreHoja}
-                #Si las observaciones no estan vacias
-                if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
-                    self.archivoConObservaciones.append(archivo)
+                    #Si las observaciones no estan vacias
+                    if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
+                        self.archivoConObservaciones.append(archivo)
 
-                numHoja += 1
+                    numHoja += 1
+                except Exception as e:
+                    print(f"Error en el archivo {i}. \nHoja: {nombreHoja}")
     
         return self.archivoConObservaciones
 
