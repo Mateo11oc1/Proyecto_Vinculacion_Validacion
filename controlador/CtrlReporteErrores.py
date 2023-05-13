@@ -1,12 +1,8 @@
 import sys
 import tkinter as tk
-
-
 from PyQt6.QtWidgets import QWidget, QFileDialog, QApplication, QMessageBox
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QScreen
-
-# from PyQt6.uic.properties import QtWidgets
 from vista.reportes import Ventana
 from vista.reportes import LoadingWidget
 from modelo.validaciones import *
@@ -24,7 +20,7 @@ class Controlador(QWidget):
         #----------------------
         self.modelo = Validaciones()
         
-
+        #---------------------------------------------------------------------------------
         self.vista.ui.btnSeleccionarCarpeta.clicked.connect(self.buscarCarpeta)
         self.vista.ui.btnVerObservaciones.clicked.connect(self.verObservaciones)
         self.vista.ui.btnSeleccionarArchivo.clicked.connect(self.seleccionarArchivo)
@@ -49,7 +45,6 @@ class Controlador(QWidget):
         self.carpeta = QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         if self.carpeta and os.path.isdir(self.carpeta):
             
-
             self.setCabeceras()
             self.modelo.leerCarpeta(self.carpeta)
             mensaje=QMessageBox()
@@ -57,13 +52,7 @@ class Controlador(QWidget):
             mensaje.exec()
             columnasConErrores = self.modelo.leerColumna()
 
-            # self.loading=LoadingWidget()
-            # self.loading.show()
-
-            # for i in range(len(columnasConErrores)):
-            #     progress=int(i/(len(columnasConErrores)-1)*100)
-            #     self.loading.set_progress(progress)
-
+    
             for i in range(len(columnasConErrores)):
                 self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
                 self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))
@@ -130,7 +119,6 @@ class Controlador(QWidget):
         self.vista.ui.tblTablaErrores.setModel(None)
         self.tabla = QStandardItemModel()
         self.carpetaObservaciones= QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
-        self.vista.ui.tblTablaErrores.setModel(None)
 
         if self.carpetaObservaciones and os.path.isdir(self.carpetaObservaciones):
             
@@ -156,7 +144,6 @@ class Controlador(QWidget):
     def seleccionarArchivo(self):
         self.vista.ui.tblTablaErrores.setModel(None)
         self.archivo, ok = QFileDialog.getOpenFileName(self, "Seleccionar archivo", r"<Default dir>", "Archivos excel (*.xlsx)")
-        self.vista.ui.tblTablaErrores.setModel(None)
         if ok:
             
             self.setCabeceras()
