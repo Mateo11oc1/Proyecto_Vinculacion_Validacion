@@ -29,6 +29,13 @@ class Validaciones:
         # self.carpetaExcel = "../"
         self.archivos_excel = []
         self.workbook = None
+        self.diccionarioErrores={1:"Se han ingresado caracteres\n", 2:"Hay datos de numero de atractores, jornada o dias pero los datos del tamanio estan vacios\n",
+                        3:"La suma de los tamanios no coincide con el numero de atractores\n", 4:"Hay datos de numero de atractores, tamanio o dias pero los datos de la jornada estan vacios\n",
+                        5: "La suma de los datos de la jornada es menor al numero de atractores\n", 6:"Hay uno o varios datos de la jornada que sobrepasa el numero de atractores\n",
+                        7: "Hay datos de numero de atractores, tamanio o jornada pero los datos de los dias estan vacios\n", 8:"Uno o varios de los datos de los días de atención sobrepasan el numero de atractores\n",
+                        9: "La suma de los datos de los dias es menor al numero de atractores\n"}
+        self.contadorCorrecciones=0
+    
 
 
     #Obtengo una lista de todos lo archivos excel
@@ -37,6 +44,22 @@ class Validaciones:
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
         
 
+
+
+    #funcion que valida que todas las hojas tengan el mismo formato    
+    def validarFormatoHoja(self,nombre_hoja, nombre_archivo, hoja_leida):
+    # Cargar los datos de la hoja que tiene el formato correcto en un DataFrame
+        dataframe = pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")
+            
+        # Comparar si los dos DataFrames tienen las mismas columnas, con los mismos nombres y en el mismo orden
+        if list(dataframe.columns) != list(hoja_leida.columns):
+            with open("archivos_formato_erroneo.log", "a") as archivo:
+
+                archivo.write("El formato de la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+" es diferente")
+        #else:
+            #print("Formato correcto")
+         
+
     #Devuelve la columna como un diccionario de acuerdo a los parametros
     #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
     def leerColumna(self)->list:
@@ -44,18 +67,24 @@ class Validaciones:
         self.columnasConErrores = []
     
         #Recorro todos los archivos
-        print(self.archivos_excel)
+        #print(self.archivos_excel)
         for i in self.archivos_excel:
             #Leo todas las hojas de una vez del documento
+            numHoja = 0
             try:
                 leido = pandas.read_excel(i, sheet_name = None)
                 
-                numHoja = 0
+                
             except Exception as e:
+                
                 print(f"Error al leer el archivo {i}")
                 #time.sleep(5)
+            
             #Recorro cada hoja
             for nombreHoja,j in leido.items():
+                #i es cada archivo
+                #j es cada hoja de cada archivo
+                #self.validarFormatoHoja(nombreHoja, i,j)
                 #Recorro cada columna
                 #shape[1] nos da el numero de columnas de la hoja
                 try:
@@ -73,14 +102,17 @@ class Validaciones:
                         columna = self.validar(columna) #Se valida que la columna esta vacia al leer
 
                         if columna != None: #si la columna no esta vacia se agrega a la lista de columnas
-                            print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["hoja"]}\n Columna: {columna["numColumna"]}')
+                            print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}')
                             #print(columna)
                             self.listaColumnas.append(columna)
+                            contador=0
                             for k in columna:
                                 for clave, valor in columna["listaErrores"].items():
                                 #si en listaErrores hay un valor del diccionario que contiene True(contiene un error) se agrega a la lista de columnas con errores
                                     if valor:
+                                        contador+=1
                                         self.columnasConErrores.append(columna)
+                                       
                                         break
                                     
                                 break
@@ -91,8 +123,41 @@ class Validaciones:
 
                 numHoja += 1
             leido = None
+            self.generarArchivoLog()
         return self.columnasConErrores
+    
+
+
+    
+    def generarArchivoLog(self):
         
+        cont=0
+
+        for i in self.columnasConErrores:
+            iterador=0
+            errores=""
+             
+            for valor in i["listaErrores"].values():
+                iterador+=1
+                if valor:
+                    errores+=self.diccionarioErrores[iterador]
+            #try:
+            with open("errores.log", "a") as archivo:
+                cont+=1
+                
+                archivo.write(str(cont)+"\n")
+                archivo.write("Nombre del archivo: "+ str(i["archivoNombre"])+"\n")
+                archivo.write("Nombre de la hoja: "+ str(i["nombreHoja"])+"\n")
+                archivo.write("Atractor con problema: "+ str(i["atractor"])+"\n")
+                archivo.write("Errores: "+errores+"\n") #esto agregar a un diccionario
+                archivo.write("Tramo: "+ str(i["tramo"])+"\n")
+                archivo.write("Zona: "+ str(i["zona"])+"\n")
+                archivo.write("Grupo: "+ str(i["grupo"])+"\n")
+                archivo.write("------------------------------------------------------------------------------------------------------------\n")
+                archivo.close()
+        
+
+
     def verObservacionesArchivos(self)->list:
         self.listaColumnas = []
         self.archivoConObservaciones = []
@@ -232,6 +297,8 @@ class Validaciones:
             wb.close()
             app.quit()
 
+            self.generarArchivoCorreccionesRealizadas("Se ha escrito el total(sumando los tamanios) de atractores en # Atractores porque era un campo vacío", columna)
+
             
 
 
@@ -306,6 +373,10 @@ class Validaciones:
                 wb.save()
                 wb.close()
                 app.quit()
+
+                self.generarArchivoCorreccionesRealizadas("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna)
+
+            
                 
                 
  
@@ -384,6 +455,22 @@ class Validaciones:
                 wb.save()
                 wb.close()
                 app.quit()
+
+                self.generarArchivoCorreccionesRealizadas("Se ha cambiado a #entreSemana al atractor que tiene marcado #lunes, #martes, #miercoles, #jueves y #viernes ", columna)
+
+            
+
+    def generarArchivoCorreccionesRealizadas(self, nombreCorreccion:str, columna):
+        self.contadorCorrecciones+=1
+        with open("correcciones.log", "a") as archivo:
+            
+            archivo.write(str(self.contadorCorrecciones)+"\n")
+            archivo.write("Nombre del archivo: "+ str(columna["archivoNombre"])+"\n")
+            archivo.write("Nombre de la hoja: "+ str(columna["nombreHoja"])+"\n")
+            archivo.write("Correccion realizada: "+nombreCorreccion+"\n")
+            archivo.write("Atractor corregido: "+ str(columna["atractor"])+"\n")
+            archivo.write("----------------------------------------------------------------------------------------------------------------\n")
+            archivo.close()
 
     #en esta funcion se llaman a todas las validacione,s optimizando su uso
     def validar(self, columna: dict):
