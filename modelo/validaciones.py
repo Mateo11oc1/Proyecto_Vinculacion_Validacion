@@ -123,6 +123,7 @@ class Validaciones:
 
                 numHoja += 1
             leido = None
+            self.generarArchivoLog()
         return self.columnasConErrores
     
 
