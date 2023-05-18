@@ -38,6 +38,7 @@ class Validaciones:
         self.dataframe=pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")
 
 
+
     #Obtengo una lista de todos lo archivos excel
     def leerCarpeta(self, carpeta):
         # Obtener todos los archivos en la carpeta que tengan la extensión .xlsx
@@ -131,30 +132,30 @@ class Validaciones:
     def generarArchivoLog(self):
         
         cont=0
-
+        cadenaEscribir = ""
         for i in self.columnasConErrores:
             iterador=0
             errores=""
-             
+            
             for valor in i["listaErrores"].values():
                 iterador+=1
                 if valor:
                     errores+=self.diccionarioErrores[iterador]
-            #try:
-            with open("errores.log", "a") as archivo:
-                cont+=1
-                
-                archivo.write(str(cont)+"\n")
-                archivo.write("Nombre del archivo: "+ str(i["archivoNombre"])+"\n")
-                archivo.write("Nombre de la hoja: "+ str(i["nombreHoja"])+"\n")
-                archivo.write("Atractor con problema: "+ str(i["atractor"])+"\n")
-                archivo.write("Errores: "+errores+"\n") #esto agregar a un diccionario
-                archivo.write("Tramo: "+ str(i["tramo"])+"\n")
-                archivo.write("Zona: "+ str(i["zona"])+"\n")
-                archivo.write("Grupo: "+ str(i["grupo"])+"\n")
-                archivo.write("------------------------------------------------------------------------------------------------------------\n")
-                archivo.close()
-        
+            cont+=1
+            cadenaEscribir = (
+                cadenaEscribir + str(cont)+"\n" + "Nombre del archivo: "+ str(i["archivoNombre"])+"\n" 
+                + "Nombre de la hoja: " + str(i["nombreHoja"])+"\n" + "Atractor con problema: "
+                + str(i["atractor"])+"\n" + "Errores: "+errores+"\n" + "Tramo: "+ str(i["tramo"])
+                + "\n" + "Tramo: "+ str(i["tramo"])+"\n" + "Zona: "+ str(i["zona"])+"\n" + "Grupo: "+ 
+                str(i["grupo"])+"\n" 
+                + "------------------------------------------------------------------------------------------------------------\n"
+                )
+            
+        with open("errores.log", "w") as archivo:
+            cont+=1
+            archivo.write(cadenaEscribir)
+            archivo.close()
+    
 
     def generarArchivoCorreccionesRealizadas(self, nombreCorreccion:str, columna):
 
