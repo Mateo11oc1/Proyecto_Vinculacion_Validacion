@@ -35,7 +35,7 @@ class Validaciones:
                         7: "Hay datos de numero de atractores, tamanio o jornada pero los datos de los dias estan vacios\n", 8:"Uno o varios de los datos de los días de atención sobrepasan el numero de atractores\n",
                         9: "La suma de los datos de los dias es menor al numero de atractores\n"}
         self.contadorCorrecciones=0
-    
+        self.dataframe=pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")
 
 
     #Obtengo una lista de todos lo archivos excel
@@ -49,10 +49,9 @@ class Validaciones:
     #funcion que valida que todas las hojas tengan el mismo formato    
     def validarFormatoHoja(self,nombre_hoja, nombre_archivo, hoja_leida):
     # Cargar los datos de la hoja que tiene el formato correcto en un DataFrame
-        dataframe = pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")
-            
+          
         # Comparar si los dos DataFrames tienen las mismas columnas, con los mismos nombres y en el mismo orden
-        if list(dataframe.columns) != list(hoja_leida.columns):
+        if list(self.dataframe.columns) != list(hoja_leida.columns):
             with open("archivos_formato_erroneo.log", "a") as archivo:
 
                 archivo.write("El formato de la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+" es diferente")
