@@ -157,6 +157,19 @@ class Validaciones:
                 archivo.close()
         
 
+    def generarArchivoCorreccionesRealizadas(self, nombreCorreccion:str, columna):
+
+        self.contadorCorrecciones+=1
+
+        with open("correcciones.log", "a") as archivo:
+            archivo.write(str(self.contadorCorrecciones)+"\n")
+            archivo.write("Nombre del archivo: "+ str(columna["archivoNombre"])+"\n")
+            archivo.write("Nombre de la hoja: "+ str(columna["nombreHoja"])+"\n")
+            archivo.write("Correccion realizada: "+nombreCorreccion+"\n")
+            archivo.write("Atractor corregido: "+ str(columna["atractor"])+"\n")
+            archivo.write("----------------------------------------------------------------------------------------------------------------\n")
+            archivo.close()
+
 
     def verObservacionesArchivos(self)->list:
         self.listaColumnas = []
@@ -296,6 +309,8 @@ class Validaciones:
             wb.save()
             wb.close()
             app.quit()
+
+            self.generarArchivoCorreccionesRealizadas("Se ha escrito el numero de atractores en #Atractores", columna)
 
             
 
@@ -454,6 +469,8 @@ class Validaciones:
                 wb.save()
                 wb.close()
                 app.quit()
+
+                self.generarArchivoCorreccionesRealizadas("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
 
     #en esta funcion se llaman a todas las validacione,s optimizando su uso
     def validar(self, columna: dict):
