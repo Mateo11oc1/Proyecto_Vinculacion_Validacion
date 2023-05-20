@@ -50,7 +50,7 @@ class Validaciones:
     #funcion que valida que todas las hojas tengan el mismo formato    
     def validarFormatoHoja(self,nombre_hoja, nombre_archivo, hoja_leida):
     # Cargar los datos de la hoja que tiene el formato correcto en un DataFrame
-          
+        
         # Comparar si los dos DataFrames tienen las mismas columnas, con los mismos nombres y en el mismo orden
         if list(self.dataframe.columns) != list(hoja_leida.columns):
             with open("archivos_formato_erroneo.log", "a") as archivo:
@@ -58,8 +58,8 @@ class Validaciones:
                 archivo.write("El formato de la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+" es diferente")
         #else:
             #print("Formato correcto")
-         
-
+    
+    
     #Devuelve la columna como un diccionario de acuerdo a los parametros
     #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
     def leerColumna(self)->list:
@@ -112,7 +112,6 @@ class Validaciones:
                                     if valor:
                                         contador+=1
                                         self.columnasConErrores.append(columna)
-                                       
                                         break
                                     
                                 break
@@ -128,7 +127,6 @@ class Validaciones:
     
 
 
-    
     def generarArchivoLog(self):
         
         cont=0
@@ -312,9 +310,6 @@ class Validaciones:
 
             self.generarArchivoCorreccionesRealizadas("Se ha escrito el numero de atractores en #Atractores", columna)
 
-            
-
-
 
     #Valida que los datos de jornada, no estan vacios
     def validarJornadaDatosVacios(self, columna: dict) -> list:
@@ -472,6 +467,45 @@ class Validaciones:
 
                 self.generarArchivoCorreccionesRealizadas("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
 
+    # Verifica y modifica si hay datos escritos en filas de abajo en las columnas de vivienda
+    def validarViviendas(self, columna: dict):
+        def validar(columna: dict):
+            if columna["atractor"] == "Casa/Villa" or columna["atractor"] == "Edificio de Departamentos":
+                listaUnida = list(columna.values())[2] + list(columna.values())[3] + list(columna.values())[4] 
+                for i in listaUnida:
+                    if not math.isnan(i):
+                        return False, i, listaUnida.index(i)
+            return True, 0, 0
+        
+        validado = validar(columna)
+        if not validado[0]:
+            print("Corrigiendo viviendas...")
+            print(columna["archivoRuta"])
+                            
+            # abre la aplicación de Excel en segundo plano
+            app = xlwings.App(visible=False)
+            
+            # abrir el archivo
+            wb = xlwings.Book(columna["archivoRuta"])
+
+            # seleccionar la hoja
+            hoja = wb.sheets[columna["nombreHoja"]]
+
+            columna["numAtractores"] = validado[1]
+            # modificar el valor la celda entre semana 
+            hoja.cells(11, columna["numColumna"]+1).value = validado[1]
+            hoja.cells(11 + validado[2] + 1, columna["numColumna"]+1).value = ""
+
+            # guarda los cambios y cierra excel
+            wb.save()
+            wb.close()
+            app.quit()
+            self.generarArchivoCorreccionesRealizadas("Se ha modificado el numero de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", 
+                                                    columna)
+            
+            
+                        
+    
     #en esta funcion se llaman a todas las validacione,s optimizando su uso
     def validar(self, columna: dict):
 
@@ -498,6 +532,7 @@ class Validaciones:
                 #las columnas 53 y 54 corresponden a Vivienda de la cual no es necesario especificar tamanio, jornada
                 #ni dias por lo cual solo se debe validar que no hayan caracteres
                 if caracteres[0]["numColumna"]>=53:
+                    self.validarViviendas(caracteres[0])
                     return caracteres[0]
                 else:
                     tamanio = self.validarTamanioDatosVacios(caracteres[0])
