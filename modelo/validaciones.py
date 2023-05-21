@@ -45,20 +45,21 @@ class Validaciones:
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
         
 
-
-
-    #funcion que valida que todas las hojas tengan el mismo formato    
-    def validarFormatoHoja(self,nombre_hoja, nombre_archivo, hoja_leida):
-    # Cargar los datos de la hoja que tiene el formato correcto en un DataFrame
-          
-        # Comparar si los dos DataFrames tienen las mismas columnas, con los mismos nombres y en el mismo orden
-        if list(self.dataframe.columns) != list(hoja_leida.columns):
-            with open("archivos_formato_erroneo.log", "a") as archivo:
-
-                archivo.write("El formato de la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+" es diferente")
-        #else:
-            #print("Formato correcto")
-         
+    #este metodo valida que las hojas tengan formato correcto retornando True si hay un error de formato
+    #un error de formato es si la tabla esta movida hacia arriba, abajo, derecha o izquierda
+    def validarFormatoIncorrecto(self, nombre_hoja, nombre_archivo, hoja_leida):
+        try:
+            if hoja_leida.iloc[1,1]=="Grupo:" and hoja_leida.iloc[2,1]=="Zona:" and hoja_leida.iloc[6,2]=="Educación" and hoja_leida.iloc[9,1]=="# Atractores":
+                pass
+            else:
+                
+                with open("hojas_formato_erroneo.log", "a") as archivo:
+                    archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
+                return True
+        except:
+            with open("hojas_formato_erroneo.log", "a") as archivo:
+                    archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
+            return True  
 
     #Devuelve la columna como un diccionario de acuerdo a los parametros
     #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
@@ -84,44 +85,48 @@ class Validaciones:
             for nombreHoja,j in leido.items():
                 #i es cada archivo
                 #j es cada hoja de cada archivo
-                #self.validarFormatoHoja(nombreHoja, i,j)
+                #si el formato de la hoja es incorrecto no se hacen las validaciones de las columnas 
+
+                if self.validarFormatoIncorrecto(nombreHoja, i,j)==True:
+                    pass
+                else:
                 #Recorro cada columna
                 #shape[1] nos da el numero de columnas de la hoja
-                try:
-                    for h in range(2, j.shape[1]):
-                        #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor,
-                        # numero,dias,jornada, tamanio)
-                        lista = j.iloc[7:, h].values.tolist()
-                        
-                        columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
-                                "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
-                                "vacia":False, "listaErrores":{}, "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
-                                "observaciones":j.iloc[30,1], "nombreHoja": nombreHoja}
-                        #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
-                        
-                        columna = self.validar(columna) #Se valida que la columna esta vacia al leer
+                    try:
+                        for h in range(2, j.shape[1]):
+                            #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor,
+                            # numero,dias,jornada, tamanio)
+                            lista = j.iloc[7:, h].values.tolist()
+                            
+                            columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
+                                    "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
+                                    "vacia":False, "listaErrores":{}, "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
+                                    "observaciones":j.iloc[30,1], "nombreHoja": nombreHoja}
+                            #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
+                            
+                            columna = self.validar(columna) #Se valida que la columna esta vacia al leer
 
-                        if columna != None: #si la columna no esta vacia se agrega a la lista de columnas
-                            print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}')
-                            #print(columna)
-                            self.listaColumnas.append(columna)
-                            contador=0
-                            for k in columna:
-                                for clave, valor in columna["listaErrores"].items():
-                                #si en listaErrores hay un valor del diccionario que contiene True(contiene un error) se agrega a la lista de columnas con errores
-                                    if valor:
-                                        contador+=1
-                                        self.columnasConErrores.append(columna)
-                                       
-                                        break
-                                    
-                                break
-                    
-                except Exception as e:
-                    print(f"Error en el archivo {os.path.basename(i)}. Hoja: {nombreHoja}: {e}")
-                    #time.sleep(5)
+                            if columna != None: #si la columna no esta vacia se agrega a la lista de columnas
+                                print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}')
+                                #print(columna)
+                                self.listaColumnas.append(columna)
+                                contador=0
+                                for k in columna:
+                                    for clave, valor in columna["listaErrores"].items():
+                                    #si en listaErrores hay un valor del diccionario que contiene True(contiene un error) se agrega a la lista de columnas con errores
+                                        if valor:
+                                            contador+=1
+                                            self.columnasConErrores.append(columna)
+                                        
+                                            break
+                                        
+                                    break
+                        
+                    except Exception as e:
+                        print(f"Error en el archivo {os.path.basename(i)}. Hoja: {nombreHoja}: {e}")
+                        #time.sleep(5)
 
-                numHoja += 1
+                    numHoja += 1
             leido = None
             self.generarArchivoLog()
         return self.columnasConErrores
