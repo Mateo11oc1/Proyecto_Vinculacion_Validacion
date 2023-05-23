@@ -6,6 +6,7 @@ def leerArchivo():
 
 
 # Conecta a la base de datos
+#(r"DRIVER..."")-> es para ignorar \n \t
 conn = pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\aimbe\OneDrive\Desktop\Vinculacion.accdb" )
 
 # Crea un cursor para ejecutar consultas

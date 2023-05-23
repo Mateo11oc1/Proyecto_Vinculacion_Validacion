@@ -53,12 +53,12 @@ class Validaciones:
                 pass
             else:
                 
-                with open("hojas_formato_erroneo.log", "a") as archivo:
-                    archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
+                #with open("hojas_formato_erroneo.log", "a") as archivo:
+                #    archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
                 return True
         except:
-            with open("hojas_formato_erroneo.log", "a") as archivo:
-                    archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
+            #with open("hojas_formato_erroneo.log", "a") as archivo:
+            #        archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
             return True  
 
     #Devuelve la columna como un diccionario de acuerdo a los parametros
