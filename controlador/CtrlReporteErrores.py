@@ -50,9 +50,8 @@ class Controlador(QWidget):
             mensaje=QMessageBox()
             mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
             mensaje.exec()
-            columnasConErrores = self.modelo.leerColumna()
-
-    
+            columnasConErrores = self.modelo.leerColumna(1)
+            
             for i in range(len(columnasConErrores)):
                 self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
                 self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))
@@ -148,7 +147,7 @@ class Controlador(QWidget):
             
             self.setCabeceras()
             self.modelo.archivos_excel = [self.archivo]
-            columnasConErrores = self.modelo.leerColumna()
+            columnasConErrores = self.modelo.leerColumna(2)
 
             for i in range(len(columnasConErrores)):
                 self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))

@@ -6,6 +6,8 @@ import math
 import logging
 import openpyxl
 import xlwings 
+import json
+import pickle
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #diccionario de errores:
 #1. Se han ingresado caracteres o decimales
@@ -45,8 +47,6 @@ class Validaciones:
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
         
 
-
-
     #funcion que valida que todas las hojas tengan el mismo formato    
     def validarFormatoHoja(self,nombre_hoja, nombre_archivo, hoja_leida):
     # Cargar los datos de la hoja que tiene el formato correcto en un DataFrame
@@ -62,10 +62,10 @@ class Validaciones:
     
     #Devuelve la columna como un diccionario de acuerdo a los parametros
     #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
-    def leerColumna(self)->list:
+    def leerColumna(self, opcion)->list:
         self.listaColumnas = []
         self.columnasConErrores = []
-    
+        self.columnasSinErrores = []
         #Recorro todos los archivos
         #print(self.archivos_excel)
         for i in self.archivos_excel:
@@ -73,8 +73,6 @@ class Validaciones:
             numHoja = 0
             try:
                 leido = pandas.read_excel(i, sheet_name = None)
-                
-                
             except Exception as e:
                 
                 print(f"Error al leer el archivo {i}")
@@ -113,6 +111,8 @@ class Validaciones:
                                         contador+=1
                                         self.columnasConErrores.append(columna)
                                         break
+                                    else:
+                                        self.columnasSinErrores.append(columna)
                                     
                                 break
                     
@@ -123,10 +123,19 @@ class Validaciones:
                 numHoja += 1
             leido = None
             self.generarArchivoLog()
+            if opcion == 1:
+                self.guardarColumnasValidas()
+                
         return self.columnasConErrores
     
-
-
+    def guardarColumnasValidas(self):
+        
+        # Serializar el objeto y guardarlo en un archivo
+        with open('datos.dat', 'wb') as archivo:
+            pickle.dump(self.columnasSinErrores, archivo)
+            archivo.close()
+        
+        
     def generarArchivoLog(self):
         
         cont=0
@@ -473,7 +482,7 @@ class Validaciones:
             if columna["atractor"] == "Casa/Villa" or columna["atractor"] == "Edificio de Departamentos":
                 listaUnida = list(columna.values())[2] + list(columna.values())[3] + list(columna.values())[4] 
                 for i in listaUnida:
-                    if not math.isnan(i):
+                    if not math.isnan(i) and math.isnan(columna["numAtractores"]):
                         return False, i, listaUnida.index(i)
             return True, 0, 0
         
