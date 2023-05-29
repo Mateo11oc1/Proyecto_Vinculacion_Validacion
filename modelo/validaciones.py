@@ -8,6 +8,7 @@ import openpyxl
 import xlwings 
 import json
 import pickle
+import re
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #diccionario de errores:
 #1. Se han ingresado caracteres o decimales
@@ -38,7 +39,18 @@ class Validaciones:
                         9: "La suma de los datos de los dias es menor al numero de atractores\n"}
         self.contadorCorrecciones=0
         self.dataframe=pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")
+        self.leerColumnasValidas()    
+        self.listaCallesTramo=[] #despues de que se ingresen las calles secundarias comentar esta linea de codigo
+        self.listaCallesSecundarias=[]
 
+    def leerColumnasValidas(self):
+        try:
+            with open('datos.dat', 'rb') as archivo:
+
+                self.columnasSinErrores=pickle.load(archivo)
+                archivo.close()
+        except Exception as e:
+            print("Error")
 
 
     #Obtengo una lista de todos lo archivos excel
@@ -63,12 +75,48 @@ class Validaciones:
             #        archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
             return True  
 
+    def almacenarCalles_Tramo(self, hoja, nombre_archivo, nombre_hoja):
+        calles_secundarias=str(hoja.iloc[3,14])
+        #para separar las calles se consideran los siguientes separadores
+        # si hay una  " y " que separe las calles
+        # \* 0 o mas repeticiones de espacios en blanco antes y despues de la coma
+        # separaciones por guiones - y que despues haya una letra 
+        # separar por &
+        #separar por numeros con punto 1. 2. ->esto falta 
+        #separadas por /
+        #separadas por entre
+        #separadas por Y
+        #separadas por un numero seguido de )
+        separadores=[r'\by\b', r'\s*,\s*', r'\s*-\s*', r'\s*&\s*',  r'\d\.', r'\s*/\s*', r'\bentre\b', r'\bY\b', r'\d+\)']
+        patron='|'.join(separadores) #une los separadores para dividir las calles si se cumple cualquier a de los patrones especificados 
+        #patron contiene \by\b|\s*,\s*|\s*-\s*|\s*&\s*|\d\.|\s*\/\s*
+        calles = [] #para que no se repitan elementos sin Case sensitive
+        #si es que no esta vacia la celda de calles secundarias 
+        if calles_secundarias!=None:
+            calles=re.split(patron, str(calles_secundarias))
+
+            # Eliminar espacios en blanco al inicio y al final de cada calle
+            calles = [calle.strip() for calle in calles if calle and calle.strip()]
+            for calle in calles:
+                #se pasan las calles a mayusculas para evitar repeticiones
+                if calle.upper() not in [c.upper() for c in self.listaCallesSecundarias]:
+                    self.listaCallesSecundarias.append(calle)
+            
+            with open("callesSecundarias.log", "a") as archivo:
+                archivo.write("Archivo:"+nombre_archivo+"  Hoja:"+nombre_hoja+"   Calles secundarias:"+str(calles)+"\n")
+                archivo.close()
+            
+            #print("Archivo:"+nombre_archivo+"  Hoja:"+nombre_hoja+"   Calles secundarias:"+str(calles))
+            
+            self.listaCallesTramo.append({"calle principal":hoja.iloc[2,12], "calles secundarias": tuple(calles), "tramo": hoja.iloc[1,12], "hoja": nombre_hoja, "nombre de archivo": nombre_archivo})    
+
+    
     #Devuelve la columna como un diccionario de acuerdo a los parametros
     #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
     def leerColumna(self, opcion)->list:
         self.listaColumnas = []
         self.columnasConErrores = []
-        self.columnasSinErrores = []
+        
         #Recorro todos los archivos
         #print(self.archivos_excel)
         for i in self.archivos_excel:
@@ -90,6 +138,7 @@ class Validaciones:
                 if self.validarFormatoIncorrecto(nombreHoja, i,j)==True:
                     pass
                 else:
+                    self.almacenarCalles_Tramo(j,os.path.basename(i),nombreHoja)
                 #Recorro cada columna
                 #shape[1] nos da el numero de columnas de la hoja
                     try:
@@ -119,7 +168,8 @@ class Validaciones:
                                             self.columnasConErrores.append(columna)
                                             break
                                         else:
-                                            self.columnasSinErrores.append(columna)
+                                            if columna not in self.columnasSinErrores:
+                                                self.columnasSinErrores.append(columna)
                                         
                                     break
                         
@@ -132,7 +182,15 @@ class Validaciones:
             self.generarArchivoLog()
             if opcion == 1:
                 self.guardarColumnasValidas()
-                
+
+        callesEscribir=""    
+        for calle in sorted(self.listaCallesSecundarias):
+            callesEscribir=callesEscribir+str(calle)+"\n"
+        
+        with open("callesOrdenadas.log", "wb") as archivo:
+            archivo.write(callesEscribir.encode())
+            archivo.close()
+
         return self.columnasConErrores
     
     def guardarColumnasValidas(self):
