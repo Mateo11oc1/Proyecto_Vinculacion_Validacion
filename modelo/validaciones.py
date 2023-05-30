@@ -1,12 +1,12 @@
 import os
 import glob
 import pandas
-import time
+import textdistance
 import math
 import logging
 import openpyxl
 import xlwings 
-import json
+import pyodbc
 import pickle
 import re
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
@@ -97,14 +97,10 @@ class Validaciones:
 
             # Eliminar espacios en blanco al inicio y al final de cada calle
             calles = [calle.strip() for calle in calles if calle and calle.strip()]
-            for calle in calles:
-                #se pasan las calles a mayusculas para evitar repeticiones
-                if calle.upper() not in [c.upper() for c in self.listaCallesSecundarias]:
-                    self.listaCallesSecundarias.append(calle)
             
-            with open("callesSecundarias.log", "a") as archivo:
-                archivo.write("Archivo:"+nombre_archivo+"  Hoja:"+nombre_hoja+"   Calles secundarias:"+str(calles)+"\n")
-                archivo.close()
+            # with open("callesSecundarias.log", "a") as archivo:
+            #     archivo.write("Archivo:"+nombre_archivo+"  Hoja:"+nombre_hoja+"   Calles secundarias:"+str(calles)+"\n")
+            #     archivo.close()
             
             #print("Archivo:"+nombre_archivo+"  Hoja:"+nombre_hoja+"   Calles secundarias:"+str(calles))
             
@@ -180,19 +176,46 @@ class Validaciones:
                     numHoja += 1
             leido = None
             self.generarArchivoLog()
+            
+            self.compararCalles(self.consultarCalles())
             if opcion == 1:
                 self.guardarColumnasValidas()
-
-        callesEscribir=""    
-        for calle in sorted(self.listaCallesSecundarias):
-            callesEscribir=callesEscribir+str(calle)+"\n"
-        
-        with open("callesOrdenadas.log", "wb") as archivo:
-            archivo.write(callesEscribir.encode())
-            archivo.close()
+            
 
         return self.columnasConErrores
     
+    def consultarCalles(self):
+        conn = pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=G:\Mi unidad\U\OficialVinculacion\Vinculacion.accdb")
+
+        # Crea un cursor para ejecutar consultas
+        cursor = conn.cursor()
+            
+        cursor.execute("SELECT * FROM calle")
+        # Obtiene los resultados
+        calles = cursor.fetchall()
+        print(calles)
+        # Cierra la conexión y el cursor
+        cursor.close()
+        conn.close()
+        
+        return list(calles)
+    
+    def compararCalles(self, callesCorrectas:list):
+        
+        def verSimilitud(calle1, calle2):
+            return 1 - (textdistance.levenshtein.normalized_distance(calle1, calle2))
+    # {"calle principal":hoja.iloc[2,12], "calles secundarias": tuple(calles), 
+    #  "tramo": hoja.iloc[1,12], "hoja": nombre_hoja, "nombre de archivo": nombre_archivo}
+        
+        for hoja in self.listaCallesTramo:
+            for calle in callesCorrectas:
+                
+                if verSimilitud(calle[1], hoja["calle principal"].upper()) >= 0.8:
+                    # hoja["calle principal"] = calle
+                    print(f"---------------------------------\nCalle archivo: {hoja['calle principal']}\nCalle cambiada: {calle}")
+            
+
+        
     def guardarColumnasValidas(self):
         
         # Serializar el objeto y guardarlo en un archivo
