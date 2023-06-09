@@ -131,47 +131,47 @@ class Validaciones:
                 #j es cada hoja de cada archivo
                 #si el formato de la hoja es incorrecto no se hacen las validaciones de las columnas 
 
-                # if self.validarFormatoIncorrecto(nombreHoja, i,j)==True:
-                #     pass
-                # else:
+                if self.validarFormatoIncorrecto(nombreHoja, i,j)==True:
+                    pass
+                else:
                     # self.almacenarCalles_Tramo(j,os.path.basename(i),nombreHoja)
-            #Recorro cada columna
-            #shape[1] nos da el numero de columnas de la hoja
-                try:
-                    for h in range(2, j.shape[1]):
-                        #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor,
-                        # numero,dias,jornada, tamanio)
-                        lista = j.iloc[7:, h].values.tolist()
-                        
-                        columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
-                                "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
-                                "vacia":False, "listaErrores":{}, "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
-                                "observaciones":j.iloc[30,1], "nombreHoja": nombreHoja}
-                        #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
-                        
-                        columna = self.validar(columna) #Se valida que la columna esta vacia al leer
+                    #Recorro cada columna
+                    #shape[1] nos da el numero de columnas de la hoja
+                    try:
+                        for h in range(2, j.shape[1]):
+                            #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor,
+                            # numero,dias,jornada, tamanio)
+                            lista = j.iloc[7:, h].values.tolist()
+                            
+                            columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
+                                    "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
+                                    "vacia":False, "listaErrores":{}, "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
+                                    "observaciones":j.iloc[30,1], "nombreHoja": nombreHoja}
+                            #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
+                            
+                            columna = self.validar(columna) #Se valida que la columna esta vacia al leer
 
-                        if columna != None: #si la columna no esta vacia se agrega a la lista de columnas
-                            print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}')
-                            #print(columna)
-                            self.listaColumnas.append(columna)
-                            contador=0
-                            for k in columna:
-                                for clave, valor in columna["listaErrores"].items():
-                                #si en listaErrores hay un valor del diccionario que contiene True(contiene un error) se agrega a la lista de columnas con errores
-                                    if valor:
-                                        contador+=1
-                                        self.columnasConErrores.append(columna)
-                                        break
-                                    else:
-                                        if columna not in self.columnasSinErrores:
-                                            self.columnasSinErrores.append(columna)
-                                    
-                                break
-                    
-                except Exception as e:
-                    print(f"Error en el archivo {os.path.basename(i)}. Hoja: {nombreHoja}: {e}")
-                    #time.sleep(5)
+                            if columna != None: #si la columna no esta vacia se agrega a la lista de columnas
+                                print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}')
+                                #print(columna)
+                                self.listaColumnas.append(columna)
+                                contador=0
+                                for k in columna:
+                                    for clave, valor in columna["listaErrores"].items():
+                                    #si en listaErrores hay un valor del diccionario que contiene True(contiene un error) se agrega a la lista de columnas con errores
+                                        if valor:
+                                            contador+=1
+                                            self.columnasConErrores.append(columna)
+                                            break
+                                        else:
+                                            if columna not in self.columnasSinErrores:
+                                                self.columnasSinErrores.append(columna)
+                                                break
+                                    break
+                        
+                    except Exception as e:
+                        print(f"Error en el archivo {os.path.basename(i)}. Hoja: {nombreHoja}: {e}")
+                        #time.sleep(5)
 
                 numHoja += 1
             leido = None
@@ -251,6 +251,7 @@ class Validaciones:
                             columna["grupo"]
                         )
                         print(datosInsercion)
+                        self.cursorBDD.execute("DELETE FROM detallescolumna")
                         self.cursorBDD.execute("INSERT INTO detallescolumna (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
                         
                         datosInsercion = (
@@ -259,13 +260,15 @@ class Validaciones:
                             columna["nombreHoja"], 
                             columna["atractor"], 
                         )
+                        
+                        self.cursorBDD.execute("DELETE FROM error_detalle")
                         self.cursorBDD.execute("INSERT INTO error_detalle (idError, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
                         
                         self.connBDD.commit()
                         
                     except pyodbc.Error as e:
                         print(datosInsercion)
-                        time.sleep(10)
+                        # time.sleep(10)
                         logging.error("Error al ejecutar la consulta: %s", e)
                         self.connBDD.rollback()
                     except KeyError as e:
