@@ -148,7 +148,7 @@ class Controlador(QWidget):
             self.setCabeceras()
             self.modelo.archivos_excel = [self.archivo]
             columnasConErrores = self.modelo.leerColumna(2)
-
+        
             for i in range(len(columnasConErrores)):
                 self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
                 self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))

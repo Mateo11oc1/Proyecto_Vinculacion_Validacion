@@ -63,10 +63,11 @@ class Validaciones:
     #un error de formato es si la tabla esta movida hacia arriba, abajo, derecha o izquierda
     def validarFormatoIncorrecto(self, nombre_hoja, nombre_archivo, hoja_leida):
         try:
-            if hoja_leida.iloc[1,1]=="Grupo:" and hoja_leida.iloc[2,1]=="Zona:" and hoja_leida.iloc[6,2]=="Educación" and hoja_leida.iloc[9,1]=="# Atractores":
+            if hoja_leida.iloc[1,1]=="Grupo:" and hoja_leida.iloc[2,1]=="Zona:" and hoja_leida.iloc[6,2]=="Educación" and hoja_leida.iloc[9,1]=="# Atractores" and hoja_leida.iloc[7, 2]=="Escuela/Colegio":
+
                 pass
             else:
-                
+                print("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
                 #with open("hojas_formato_erroneo.log", "a") as archivo:
                 #    archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
                 return True
@@ -113,74 +114,55 @@ class Validaciones:
         self.listaColumnas = []
         self.columnasConErrores = []
         
-        #Recorro todos los archivos
+        #Recorro todos los archivos, i-> nombreArchivo
         #print(self.archivos_excel)
         for i in self.archivos_excel:
-            #Leo todas las hojas de una vez del documento
-            numHoja = 0
-            try:
-                leido = pandas.read_excel(i, sheet_name = None)
-            except Exception as e:
-                
-                print(f"Error al leer el archivo {i}")
-                #time.sleep(5)
             
-            #Recorro cada hoja
-            for nombreHoja,j in leido.items():
-                #i es cada archivo
-                #j es cada hoja de cada archivo
-                #si el formato de la hoja es incorrecto no se hacen las validaciones de las columnas 
-
-                if self.validarFormatoIncorrecto(nombreHoja, i,j)==True:
-                    pass
-                else:
-                    # self.almacenarCalles_Tramo(j,os.path.basename(i),nombreHoja)
-                    #Recorro cada columna
-                    #shape[1] nos da el numero de columnas de la hoja
-                    try:
-                        for h in range(2, j.shape[1]):
+            try:
+                #Leo todas las hojas de una vez del documento
+                leido = pandas.read_excel(i, sheet_name = None)
+                numHoja = 0
+                #Recorro cada hoja del archivo
+                for nombreHoja, hoja in leido.items():
+                    
+                    if not self.validarFormatoIncorrecto(nombreHoja, i, hoja):
+                        
+                        #Recorro cada columna
+                        for columna in range(2, 55):
                             #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor,
                             # numero,dias,jornada, tamanio)
-                            lista = j.iloc[7:, h].values.tolist()
-                            
+                            lista = hoja.iloc[7:, columna].values.tolist()
                             columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
-                                    "dias": lista[12:22], "numColumna": h, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
-                                    "vacia":False, "listaErrores":{}, "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
-                                    "observaciones":j.iloc[30,1], "nombreHoja": nombreHoja}
+                                    "dias": lista[12:22], "numColumna": columna, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
+                                    "vacia":False, "listaErrores":{}, "grupo": hoja.iloc[1, 2], "zona":hoja.iloc[2, 2], "tramo": hoja.iloc[1, 12],
+                                    "observaciones":hoja.iloc[30,1], "nombreHoja": nombreHoja}
                             #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
                             
-                            columna = self.validar(columna) #Se valida que la columna esta vacia al leer
-
-                            if columna != None: #si la columna no esta vacia se agrega a la lista de columnas
-                                print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}')
+                            columna = self.validar(columna)
+                            
+                            if columna != None:
+                                print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}\nAtractor: {columna["atractor"]}')
                                 #print(columna)
                                 self.listaColumnas.append(columna)
-                                contador=0
-                                for k in columna:
-                                    for clave, valor in columna["listaErrores"].items():
-                                    #si en listaErrores hay un valor del diccionario que contiene True(contiene un error) se agrega a la lista de columnas con errores
-                                        if valor:
-                                            contador+=1
-                                            self.columnasConErrores.append(columna)
-                                            break
-                                        else:
-                                            if columna not in self.columnasSinErrores:
-                                                self.columnasSinErrores.append(columna)
-                                                break
-                                    break
-                        
-                    except Exception as e:
-                        print(f"Error en el archivo {os.path.basename(i)}. Hoja: {nombreHoja}: {e}")
-                        #time.sleep(5)
-
-                numHoja += 1
-            leido = None
+                                valida = 0
+                                for error in columna["listaErrores"].values():
+                                    if error:
+                                        valida = 1
+                                        self.columnasConErrores.append(columna)
+                                        print(len(self.columnasConErrores))
+                                        break
+                                
+                                if columna not in self.columnasSinErrores and valida == 0:
+                                    self.columnasSinErrores.append(columna)
+                        numHoja += 1
+                    
+            except Exception as e:
+                print(f"Error al leer el archivo {i}")
+                #time.sleep(5)
+        
+        if opcion == 1:
+            self.guardarColumnasValidas()
             
-            # self.compararCalles(self.consultarCalles())
-            if opcion == 1:
-                self.guardarColumnasValidas()
-            
-
         self.almacenarErrores()
         return self.columnasConErrores
     
@@ -236,63 +218,80 @@ class Validaciones:
         
     def almacenarErrores(self):
         self.crearConexionBDD()
+        self.cursorBDD.execute("DELETE FROM detallescolumna")
+        self.cursorBDD.execute("DELETE FROM error_detalle")
         
         for columna in self.columnasConErrores:
             iterador=0
-            for valor in columna["listaErrores"].values():
-                iterador+=1
-                if valor:
-                    try:
-                        datosInsercion = (
-                            columna["archivoNombre"], 
-                            columna["nombreHoja"], 
-                            columna["atractor"], 
-                            columna["zona"], 
-                            columna["grupo"]
-                        )
-                        print(datosInsercion)
-                        self.cursorBDD.execute("DELETE FROM detallescolumna")
-                        self.cursorBDD.execute("INSERT INTO detallescolumna (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
+            try:
+                datosInsercion = (
+                    columna["archivoNombre"], 
+                    columna["nombreHoja"], 
+                    columna["atractor"], 
+                    columna["zona"], 
+                    columna["grupo"]
+                )
+                print(datosInsercion)
+                self.cursorBDD.execute("INSERT INTO detallescolumna (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
+                
+                for valor in columna["listaErrores"].values():
+                    iterador+=1
+                    if valor:
+                            datosInsercion = (
+                                iterador, 
+                                columna["archivoNombre"], 
+                                columna["nombreHoja"], 
+                                columna["atractor"], 
+                            )
+                            print(datosInsercion)
+                            self.cursorBDD.execute("INSERT INTO error_detalle (idError, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
+                            
+                            self.connBDD.commit()
                         
-                        datosInsercion = (
-                            iterador, 
-                            columna["archivoNombre"], 
-                            columna["nombreHoja"], 
-                            columna["atractor"], 
-                        )
-                        
-                        self.cursorBDD.execute("DELETE FROM error_detalle")
-                        self.cursorBDD.execute("INSERT INTO error_detalle (idError, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
-                        
-                        self.connBDD.commit()
-                        
-                    except pyodbc.Error as e:
-                        print(datosInsercion)
-                        # time.sleep(10)
-                        logging.error("Error al ejecutar la consulta: %s", e)
-                        self.connBDD.rollback()
-                    except KeyError as e:
-                        logging.error("Error de clave en el diccionario: %s", e)
-                        self.connBDD.rollback()
-                        
+            except pyodbc.Error as e:
+                logging.error("Error: %s", e)
+                self.connBDD.rollback()
+                                
         self.cerrarConexion()
                         
             
+    def almacenarCorrecionesBDD(self, nombreCorreccion:str, columna):
+
+        self.crearConexionBDD()
     
-
-    def generarArchivoCorreccionesRealizadas(self, nombreCorreccion:str, columna):
-
-        self.contadorCorrecciones+=1
-
-        with open("correcciones.log", "a") as archivo:
-            archivo.write(str(self.contadorCorrecciones)+"\n")
-            archivo.write("Nombre del archivo: "+ str(columna["archivoNombre"])+"\n")
-            archivo.write("Nombre de la hoja: "+ str(columna["nombreHoja"])+"\n")
-            archivo.write("Correccion realizada: "+nombreCorreccion+"\n")
-            archivo.write("Atractor corregido: "+ str(columna["atractor"])+"\n")
-            archivo.write("----------------------------------------------------------------------------------------------------------------\n")
-            archivo.close()
-
+        try:
+            self.cursorBDD.execute("SELECT id FROM correcciones WHERE descripcion = ?", nombreCorreccion)
+            res = list(self.cursorBDD.fetchall())
+            idCorrecion = res[0][0]
+            print("Id correccion: " + str(idCorrecion))
+        
+            datosInsercion = (
+                columna["archivoNombre"], 
+                columna["nombreHoja"], 
+                columna["atractor"], 
+                columna["zona"], 
+                columna["grupo"]
+            )
+            print(datosInsercion)
+                        
+            self.cursorBDD.execute("INSERT INTO DetalleCol_Correcciones (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
+                        
+            datosInsercion = (
+                idCorrecion,
+                columna["archivoNombre"], 
+                columna["nombreHoja"], 
+                columna["atractor"], 
+            )
+                        
+            self.cursorBDD.execute("INSERT INTO correccion_detalle (idCorreccion, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
+                        
+            self.connBDD.commit()
+        except pyodbc.Error as e:
+            print(datosInsercion)
+            # time.sleep(10)
+            logging.error("Error al ejecutar la consulta: %s", e)
+            self.connBDD.rollback()
+        self.cerrarConexion()
 
     def verObservacionesArchivos(self)->list:
         self.listaColumnas = []
@@ -433,7 +432,7 @@ class Validaciones:
             wb.close()
             app.quit()
 
-            self.generarArchivoCorreccionesRealizadas("Se ha escrito el numero de atractores en #Atractores", columna)
+            self.almacenarCorrecionesBDD("Se ha escrito el número de atractores en #Atractores", columna)
 
 
     #Valida que los datos de jornada, no estan vacios
@@ -509,7 +508,7 @@ class Validaciones:
                 wb.close()
                 app.quit()
 
-                self.generarArchivoCorreccionesRealizadas("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna)
+                self.almacenarCorrecionesBDD("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna)
 
             
                 
@@ -590,7 +589,7 @@ class Validaciones:
                 wb.close()
                 app.quit()
 
-                self.generarArchivoCorreccionesRealizadas("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
+                self.almacenarCorrecionesBDD("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
 
     # Verifica y modifica si hay datos escritos en filas de abajo en las columnas de vivienda
     def validarViviendas(self, columna: dict):
@@ -625,7 +624,7 @@ class Validaciones:
             wb.save()
             wb.close()
             app.quit()
-            self.generarArchivoCorreccionesRealizadas("Se ha modificado el numero de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", 
+            self.almacenarCorrecionesBDD("Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", 
                                                     columna)
             
             
@@ -638,7 +637,7 @@ class Validaciones:
         vacia = self.validarColVacia(columna)
         #si una columna esta vacia, no se valida nada
         if vacia[1]:
-            return
+            return None
         else:
             caracteres = self.validarCaracteres(vacia[0])
             #si una columna contiene caracteres ya no se valida nada mas y se marcan todo el resto de errores como falsos
