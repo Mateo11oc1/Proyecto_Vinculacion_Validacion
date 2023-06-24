@@ -9,6 +9,7 @@ import xlwings
 import pyodbc
 import pickle
 import re
+from geopy.geocoders import Nominatim
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #diccionario de errores:
 #1. Se han ingresado caracteres o decimales
@@ -68,12 +69,10 @@ class Validaciones:
                 pass
             else:
                 print("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
-                #with open("hojas_formato_erroneo.log", "a") as archivo:
-                #    archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
+                
                 return True
         except:
-            #with open("hojas_formato_erroneo.log", "a") as archivo:
-            #        archivo.write("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
+            
             return True  
 
     def almacenarCalles_Tramo(self, hoja, nombre_archivo, nombre_hoja):
@@ -99,13 +98,7 @@ class Validaciones:
             # Eliminar espacios en blanco al inicio y al final de cada calle
             calles = [calle.strip() for calle in calles if calle and calle.strip()]
             
-            # with open("callesSecundarias.log", "a") as archivo:
-            #     archivo.write("Archivo:"+nombre_archivo+"  Hoja:"+nombre_hoja+"   Calles secundarias:"+str(calles)+"\n")
-            #     archivo.close()
-            
-            #print("Archivo:"+nombre_archivo+"  Hoja:"+nombre_hoja+"   Calles secundarias:"+str(calles))
-            
-            self.listaCallesTramo.append({"calle principal":hoja.iloc[2,12], "calles secundarias": tuple(calles), "tramo": hoja.iloc[1,12], "hoja": nombre_hoja, "nombre de archivo": nombre_archivo})    
+            return {"calle principal":str(hoja.iloc[2,12]), "calles secundarias": tuple(calles), "tramo": hoja.iloc[1,12], "hoja": nombre_hoja, "nombre de archivo": nombre_archivo}
 
     
     #Devuelve la columna como un diccionario de acuerdo a los parametros
@@ -154,10 +147,10 @@ class Validaciones:
                                 
                                 if columna not in self.columnasSinErrores and valida == 0:
                                     self.columnasSinErrores.append(columna)
-                        numHoja += 1
-                    
+                                    
+                        self.compararCalles(self.almacenarCalles_Tramo(hoja, i, nombreHoja))
             except Exception as e:
-                print(f"Error al leer el archivo {i}")
+                print(f"Error al leer el archivo {i}\n {e}")
                 #time.sleep(5)
         
         if opcion == 1:
@@ -175,37 +168,22 @@ class Validaciones:
     def cerrarConexion(self):
         self.cursorBDD.close()
         self.connBDD.close()
-        
-    def consultarCalles(self):
-        conn = pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=G:\Mi unidad\U\OficialVinculacion\Vinculacion.accdb")
-
-        # Crea un cursor para ejecutar consultas
-        cursor = conn.cursor()
             
-        cursor.execute("SELECT * FROM calle")
-        # Obtiene los resultados
-        calles = cursor.fetchall()
-        print(calles)
-        # Cierra la conexión y el cursor
-        cursor.close()
-        conn.close()
+    def compararCalles(self, callesTramo: dict):
         
-        return list(calles)
+        geolocator = Nominatim(user_agent="OficialVinculacion")  # Especifica un nombre de agente personalizado
+        location = geolocator.geocode(callesTramo["calle principal"] + ', Cuenca, Ecuador')
     
-    def compararCalles(self, callesCorrectas:list):
-        
-        def verSimilitud(calle1, calle2):
-            return 1 - (textdistance.levenshtein.normalized_distance(calle1, calle2))
-    # {"calle principal":hoja.iloc[2,12], "calles secundarias": tuple(calles), 
-    #  "tramo": hoja.iloc[1,12], "hoja": nombre_hoja, "nombre de archivo": nombre_archivo}
-        
-        for hoja in self.listaCallesTramo:
-            for calle in callesCorrectas:
-                
-                if verSimilitud(calle[1], hoja["calle principal"].upper()) >= 0.8:
-                    # hoja["calle principal"] = calle
-                    print(f"---------------------------------\nCalle archivo: {hoja['calle principal']}\nCalle cambiada: {calle}")
+        if location:
+            print("Calle: ", callesTramo["calle principal"])
+            print('Calle de API:', location.address)
             
+            print('Latitud:', location.latitude)
+            print('Longitud:', location.longitude)
+            time.sleep(7)
+        else:
+            print('No se encontró la calle.')
+                
 
         
     def guardarColumnasValidas(self):
