@@ -40,20 +40,9 @@ class Validaciones:
                         7: "Hay datos de numero de atractores, tamanio o jornada pero los datos de los dias estan vacios\n", 8:"Uno o varios de los datos de los días de atención sobrepasan el numero de atractores\n",
                         9: "La suma de los datos de los dias es menor al numero de atractores\n"}
         self.contadorCorrecciones=0
-        self.dataframe=pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")
-        #self.leerColumnasValidas()    
+        self.dataframe=pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")    
         self.listaCallesTramo=[] #despues de que se ingresen las calles secundarias comentar esta linea de codigo
         self.listaCallesSecundarias=[]
-
-
-    #def leerColumnasValidas(self):
-    #     try:
-    #         with open('datos.dat', 'rb') as archivo:
-
-    #             self.columnasSinErrores=pickle.load(archivo)
-    #             archivo.close()
-    #     except Exception as e:
-    #         print("Error")
 
 
     #Obtengo una lista de todos lo archivos excel
@@ -153,9 +142,6 @@ class Validaciones:
                                     if correccion:
                                         self.columnasConCorrecciones.append(columna)
                                         break
-                                
-                                #if columna not in self.columnasSinErrores and valida == 0:
-                                #     self.columnasSinErrores.append(columna)
                         
                         #self.compararCalles(self.almacenarCalles_Tramo(hoja, i, nombreHoja))    
                     
@@ -166,9 +152,6 @@ class Validaciones:
             except Exception as e:
                 print(f"Error al leer el archivo {i}\n {e}")
                 #time.sleep(5)
-        
-        # if opcion == 1:
-        #     self.guardarColumnasValidas()
             
         self.almacenarErrores()
         return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto
@@ -197,14 +180,6 @@ class Validaciones:
             # time.sleep(7)
         else:
             print('No se encontró la calle.')
-
-        
-    # def guardarColumnasValidas(self):
-        
-    #     # Serializar el objeto y guardarlo en un archivo
-    #     with open('datos.dat', 'wb') as archivo:
-    #         pickle.dump(self.columnasSinErrores, archivo)
-    #         archivo.close()
         
         
     def almacenarErrores(self):

@@ -212,18 +212,8 @@ class Controlador(QWidget):
             
             self.setCabecerasTablaErrores()
             self.modelo.archivos_excel = [self.archivo]
-            columnasConErrores = self.modelo.leerColumna(2)
+            columnasConErrores, columnasConCorrecciones, hojas_mal_formato = self.modelo.leerColumna(2)
+            self.llenarTablaErrores(columnasConErrores)
+            self.llenarTablaCorrecciones(columnasConCorrecciones)
+            self.llenarTablaMalFormato(hojas_mal_formato)
         
-            for i in range(len(columnasConErrores)):
-                self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
-                self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))
-                self.tabla.setItem(i,2,QStandardItem(str(columnasConErrores[i]["numColumna"])))
-                self.tabla.setItem(i,3,QStandardItem(str(columnasConErrores[i]["atractor"])))
-                self.tabla.setItem(i,4,QStandardItem(str(self.detalleErrores(columnasConErrores[i]["listaErrores"]))))
-                self.tabla.setItem(i,5,QStandardItem(str(columnasConErrores[i]["tramo"])))
-                self.tabla.setItem(i,6,QStandardItem(str(columnasConErrores[i]["zona"])))
-                self.tabla.setItem(i,7,QStandardItem(str(columnasConErrores[i]["grupo"])))
-
-
-            self.vista.ui.tblTablaErrores.resizeColumnsToContents()
-            self.vista.ui.tblTablaErrores.resizeRowsToContents()
