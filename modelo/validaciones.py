@@ -29,7 +29,8 @@ from geopy.geocoders import Nominatim
 class Validaciones:
 
     def __init__(self):
-        
+        self.ruta_access=r"G:\Mi unidad\U\OficialVinculacion\Vinculacion.accdb" 
+        #cambiar segun la ubicacion del archivo
         # self.carpetaExcel = "../"
         self.archivos_excel = []
         self.workbook = None
@@ -40,18 +41,19 @@ class Validaciones:
                         9: "La suma de los datos de los dias es menor al numero de atractores\n"}
         self.contadorCorrecciones=0
         self.dataframe=pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")
-        self.leerColumnasValidas()    
+        #self.leerColumnasValidas()    
         self.listaCallesTramo=[] #despues de que se ingresen las calles secundarias comentar esta linea de codigo
         self.listaCallesSecundarias=[]
 
-    def leerColumnasValidas(self):
-        try:
-            with open('datos.dat', 'rb') as archivo:
 
-                self.columnasSinErrores=pickle.load(archivo)
-                archivo.close()
-        except Exception as e:
-            print("Error")
+    #def leerColumnasValidas(self):
+    #     try:
+    #         with open('datos.dat', 'rb') as archivo:
+
+    #             self.columnasSinErrores=pickle.load(archivo)
+    #             archivo.close()
+    #     except Exception as e:
+    #         print("Error")
 
 
     #Obtengo una lista de todos lo archivos excel
@@ -63,6 +65,7 @@ class Validaciones:
     #este metodo valida que las hojas tengan formato correcto retornando True si hay un error de formato
     #un error de formato es si la tabla esta movida hacia arriba, abajo, derecha o izquierda
     def validarFormatoIncorrecto(self, nombre_hoja, nombre_archivo, hoja_leida):
+        
         try:
             if hoja_leida.iloc[1,1]=="Grupo:" and hoja_leida.iloc[2,1]=="Zona:" and hoja_leida.iloc[6,2]=="Educación" and hoja_leida.iloc[9,1]=="# Atractores" and hoja_leida.iloc[7, 2]=="Escuela/Colegio":
 
@@ -103,10 +106,11 @@ class Validaciones:
     
     #Devuelve la columna como un diccionario de acuerdo a los parametros
     #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
-    def leerColumna(self, opcion)->list:
+    def leerColumna(self, opcion):
+        self.listaFormatoIncorrecto=[]
         self.listaColumnas = []
         self.columnasConErrores = []
-        
+        self.columnasConCorrecciones=[]
         #Recorro todos los archivos, i-> nombreArchivo
         #print(self.archivos_excel)
         for i in self.archivos_excel:
@@ -127,8 +131,8 @@ class Validaciones:
                             lista = hoja.iloc[7:, columna].values.tolist()
                             columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
                                     "dias": lista[12:22], "numColumna": columna, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
-                                    "vacia":False, "listaErrores":{}, "grupo": hoja.iloc[1, 2], "zona":hoja.iloc[2, 2], "tramo": hoja.iloc[1, 12],
-                                    "observaciones":hoja.iloc[30,1], "nombreHoja": nombreHoja}
+                                    "vacia":False, "listaErrores":{1:False, 2:False,3:False,4:False,5:False, 6:False,7:False,8:False, 9:False}, "grupo": hoja.iloc[1, 2], "zona":hoja.iloc[2, 2], "tramo": hoja.iloc[1, 12],
+                                    "observaciones":hoja.iloc[30,1], "nombreHoja": nombreHoja, "listaCorrecciones":{1:False, 2:False,3:False,4:False} }
                             #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
                             
                             columna = self.validar(columna)
@@ -145,30 +149,40 @@ class Validaciones:
                                         print(len(self.columnasConErrores))
                                         break
                                 
-                                if columna not in self.columnasSinErrores and valida == 0:
-                                    self.columnasSinErrores.append(columna)
-                                    
-                        self.compararCalles(self.almacenarCalles_Tramo(hoja, i, nombreHoja))
+                                for correccion in columna["listaCorrecciones"].values():
+                                    if correccion:
+                                        self.columnasConCorrecciones.append(columna)
+                                        break
+                                
+                                #if columna not in self.columnasSinErrores and valida == 0:
+                                #     self.columnasSinErrores.append(columna)
+                        
+                        #self.compararCalles(self.almacenarCalles_Tramo(hoja, i, nombreHoja))    
+                    
+                    else:
+                        malformato={"nombre_archivo":os.path.basename(i),"nombre_hoja": nombreHoja }
+                        self.listaFormatoIncorrecto.append(malformato)
+                    
             except Exception as e:
                 print(f"Error al leer el archivo {i}\n {e}")
                 #time.sleep(5)
         
-        if opcion == 1:
-            self.guardarColumnasValidas()
+        # if opcion == 1:
+        #     self.guardarColumnasValidas()
             
         self.almacenarErrores()
-        return self.columnasConErrores
+        return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto
     
     def crearConexionBDD(self):
         
-        with pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=G:\Mi unidad\U\OficialVinculacion\Vinculacion.accdb") as self.connBDD:
+        with pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ="+self.ruta_access) as self.connBDD:
             # Crea un cursor para ejecutar consultas
             self.cursorBDD = self.connBDD.cursor()
         
     def cerrarConexion(self):
         self.cursorBDD.close()
         self.connBDD.close()
-            
+        
     def compararCalles(self, callesTramo: dict):
         
         geolocator = Nominatim(user_agent="OficialVinculacion")  # Especifica un nombre de agente personalizado
@@ -180,18 +194,17 @@ class Validaciones:
             
             print('Latitud:', location.latitude)
             print('Longitud:', location.longitude)
-            time.sleep(7)
+            # time.sleep(7)
         else:
             print('No se encontró la calle.')
-                
 
         
-    def guardarColumnasValidas(self):
+    # def guardarColumnasValidas(self):
         
-        # Serializar el objeto y guardarlo en un archivo
-        with open('datos.dat', 'wb') as archivo:
-            pickle.dump(self.columnasSinErrores, archivo)
-            archivo.close()
+    #     # Serializar el objeto y guardarlo en un archivo
+    #     with open('datos.dat', 'wb') as archivo:
+    #         pickle.dump(self.columnasSinErrores, archivo)
+    #         archivo.close()
         
         
     def almacenarErrores(self):
@@ -392,7 +405,7 @@ class Validaciones:
         
             # abrir el archivo
             print(columna["archivoRuta"])
-                        
+            
             # abre la aplicación de Excel en segundo plano
             app = xlwings.App(visible=False)
             
@@ -411,6 +424,7 @@ class Validaciones:
             app.quit()
 
             self.almacenarCorrecionesBDD("Se ha escrito el número de atractores en #Atractores", columna)
+            columna["listaCorrecciones"][1] = True
 
 
     #Valida que los datos de jornada, no estan vacios
@@ -487,6 +501,7 @@ class Validaciones:
                 app.quit()
 
                 self.almacenarCorrecionesBDD("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna)
+                columna["listaCorrecciones"][2] = True
 
             
                 
@@ -568,6 +583,7 @@ class Validaciones:
                 app.quit()
 
                 self.almacenarCorrecionesBDD("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
+                columna["listaCorrecciones"][3] = True
 
     # Verifica y modifica si hay datos escritos en filas de abajo en las columnas de vivienda
     def validarViviendas(self, columna: dict):
@@ -604,7 +620,7 @@ class Validaciones:
             app.quit()
             self.almacenarCorrecionesBDD("Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", 
                                                     columna)
-            
+            columna["listaCorrecciones"][4] = True
             
                         
     
@@ -677,6 +693,3 @@ class Validaciones:
                         self.corregirEntreSemana(colRetorno)
 
         return colRetorno
-
-
-

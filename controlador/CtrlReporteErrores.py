@@ -4,7 +4,6 @@ from PyQt6.QtWidgets import QWidget, QFileDialog, QApplication, QMessageBox
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QScreen
 from vista.reportes import Ventana
-from vista.reportes import LoadingWidget
 from modelo.validaciones import *
 
 class Controlador(QWidget):
@@ -44,27 +43,62 @@ class Controlador(QWidget):
         self.vista.ui.tblTablaErrores.setModel(None)
         self.carpeta = QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         if self.carpeta and os.path.isdir(self.carpeta):
-            
-            self.setCabeceras()
             self.modelo.leerCarpeta(self.carpeta)
             mensaje=QMessageBox()
             mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
             mensaje.exec()
-            columnasConErrores = self.modelo.leerColumna(1)
+            columnasConErrores, columnasConCorrecciones, hojas_mal_formato = self.modelo.leerColumna(1)
+            self.llenarTablaErrores(columnasConErrores)
+            self.llenarTablaCorrecciones(columnasConCorrecciones)
+            self.llenarTablaMalFormato(hojas_mal_formato)
             
-            for i in range(len(columnasConErrores)):
-                self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
-                self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))
-                self.tabla.setItem(i,2,QStandardItem(str(columnasConErrores[i]["numColumna"])))
-                self.tabla.setItem(i,3,QStandardItem(str(columnasConErrores[i]["atractor"])))
-                self.tabla.setItem(i,4,QStandardItem(str(self.detalleErrores(columnasConErrores[i]["listaErrores"]))))
-                self.tabla.setItem(i,5,QStandardItem(str(columnasConErrores[i]["tramo"])))
-                self.tabla.setItem(i,6,QStandardItem(str(columnasConErrores[i]["zona"])))
-                self.tabla.setItem(i,7,QStandardItem(str(columnasConErrores[i]["grupo"])))
+
+    def llenarTablaErrores(self, columnasConErrores):
+        self.setCabecerasTablaErrores()
+    
+        
+        for i in range(len(columnasConErrores)):
+            self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
+            self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))
+            self.tabla.setItem(i,2,QStandardItem(str(columnasConErrores[i]["numColumna"])))
+            self.tabla.setItem(i,3,QStandardItem(str(columnasConErrores[i]["atractor"])))
+            self.tabla.setItem(i,4,QStandardItem(str(self.detalleErrores(columnasConErrores[i]["listaErrores"]))))
+            self.tabla.setItem(i,5,QStandardItem(str(columnasConErrores[i]["tramo"])))
+            self.tabla.setItem(i,6,QStandardItem(str(columnasConErrores[i]["zona"])))
+            self.tabla.setItem(i,7,QStandardItem(str(columnasConErrores[i]["grupo"])))
 
 
-            self.vista.ui.tblTablaErrores.resizeColumnsToContents()
-            self.vista.ui.tblTablaErrores.resizeRowsToContents()
+        self.vista.ui.tblTablaErrores.resizeColumnsToContents()
+        self.vista.ui.tblTablaErrores.resizeRowsToContents()
+
+    def llenarTablaCorrecciones(self, columnasConCorrecciones):
+        self.setCabecerasTablaCorrecciones()
+    
+        
+        for i in range(len(columnasConCorrecciones)):
+            self.tablaCorreccion.setItem(i,0,QStandardItem(str(columnasConCorrecciones[i]["archivoNombre"])))
+            self.tablaCorreccion.setItem(i,1,QStandardItem(str(columnasConCorrecciones[i]["nombreHoja"])))
+            self.tablaCorreccion.setItem(i,2,QStandardItem(str(columnasConCorrecciones[i]["atractor"])))
+            self.tablaCorreccion.setItem(i,3,QStandardItem(str(self.detalleCorrecciones(columnasConCorrecciones[i]["listaCorrecciones"]))))
+            self.tablaCorreccion.setItem(i,4,QStandardItem(str(columnasConCorrecciones[i]["tramo"])))
+            self.tablaCorreccion.setItem(i,5,QStandardItem(str(columnasConCorrecciones[i]["zona"])))
+            self.tablaCorreccion.setItem(i,6,QStandardItem(str(columnasConCorrecciones[i]["grupo"])))
+
+
+        self.vista.ui.tblTablaCorreciones.resizeColumnsToContents()
+        self.vista.ui.tblTablaCorreciones.resizeRowsToContents()
+
+    def llenarTablaMalFormato(self, malformato):
+        tablaMalFormato = QStandardItemModel()
+        tablaMalFormato.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja"])
+        self.vista.ui.tblFormatoIncorrecto.setModel(tablaMalFormato)
+        cabecera = self.vista.ui.tblFormatoIncorrecto.horizontalHeader()
+        cabecera.resizeSection(0,450)
+        cabecera.resizeSection(1,250)
+
+        for i in range(len(malformato)):
+            tablaMalFormato.setItem(i,0,QStandardItem(str(malformato[i]["nombre_archivo"])))
+            tablaMalFormato.setItem(i,1,QStandardItem(str(malformato[i]["nombre_hoja"])))
 
 
     def detalleErrores(self, listaErrores):
@@ -98,10 +132,26 @@ class Controlador(QWidget):
 
         return mensajeErrores
 
+    def detalleCorrecciones(self, listaCorrecciones):
+        mensajeCorrecciones=""
 
-    def setCabeceras(self):
+        if listaCorrecciones[1]==True:
+            mensajeCorrecciones+= "Se ha escrito el número de atractores en #Atractores\n"
+
+        if listaCorrecciones[2]==True:
+            mensajeCorrecciones+= "Se ha cambiado los datos de #vespertino y #matutino por #diurno\n"
+
+        if listaCorrecciones[3]==True:
+            mensajeCorrecciones=mensajeCorrecciones+"Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana\n"
+
+        if listaCorrecciones[4]==True:
+            mensajeCorrecciones=mensajeCorrecciones+"Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores"
+
+        return mensajeCorrecciones
+
+    def setCabecerasTablaErrores(self):
         self.tabla = QStandardItemModel()
-        self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja", "Numero de columna", "Atractor", "Detalle", "Tramo", "Zona", "Grupo"])
+        self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja", "Numero de columna", "Atractor", "Errores encontrados", "Tramo", "Zona", "Grupo"])
         self.vista.ui.tblTablaErrores.setModel(self.tabla)
         cabecera = self.vista.ui.tblTablaErrores.horizontalHeader()
         # cabecera.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
@@ -112,11 +162,26 @@ class Controlador(QWidget):
         cabecera.resizeSection(4,70)
         cabecera.resizeSection(5,70)
         cabecera.resizeSection(6,70)
+    
+    def setCabecerasTablaCorrecciones(self):
+        self.tablaCorreccion = QStandardItemModel()
+        self.tablaCorreccion.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja",  "Atractor", "Correcciones", "Tramo", "Zona", "Grupo"])
+        self.vista.ui.tblTablaCorreciones.setModel(self.tablaCorreccion)
+        cabecera = self.vista.ui.tblTablaCorreciones.horizontalHeader()
+        # cabecera.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        cabecera.resizeSection(0,120)
+        cabecera.resizeSection(1,120)
+        cabecera.resizeSection(2,100)
+        cabecera.resizeSection(3,660)
+        cabecera.resizeSection(4,70)
+        cabecera.resizeSection(5,70)
+        cabecera.resizeSection(6,70)
+
 
 
     def verObservaciones(self):
-        self.vista.ui.tblTablaErrores.setModel(None)
-        self.tabla = QStandardItemModel()
+        self.vista.ui.tblVerObservaciones.setModel(None)
+        self.tablaObservaciones = QStandardItemModel()
         self.carpetaObservaciones= QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
 
         if self.carpetaObservaciones and os.path.isdir(self.carpetaObservaciones):
@@ -126,26 +191,26 @@ class Controlador(QWidget):
             #mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
             #mensaje.exec()
             archivos = self.modelo.verObservacionesArchivos()
-            self.tabla.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja",  "Observaciones", "Tramo", "Zona", "Grupo"])
-            self.vista.ui.tblTablaErrores.setModel(self.tabla)
+            self.tablaObservaciones.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja",  "Observaciones", "Tramo", "Zona", "Grupo"])
+            self.vista.ui.tblVerObservaciones.setModel(self.tablaObservaciones)
 
             for i in range(len(archivos)):
-                self.tabla.setItem(i,0,QStandardItem(str(archivos[i]["archivoNombre"])))
-                self.tabla.setItem(i,1,QStandardItem(str(archivos[i]["nombreHoja"])))
-                self.tabla.setItem(i,2,QStandardItem(str(archivos[i]["observaciones"])))
-                self.tabla.setItem(i,3,QStandardItem(str(archivos[i]["tramo"])))
-                self.tabla.setItem(i,4,QStandardItem(str(archivos[i]["zona"])))
-                self.tabla.setItem(i,5,QStandardItem(str(archivos[i]["grupo"])))
+                self.tablaObservaciones.setItem(i,0,QStandardItem(str(archivos[i]["archivoNombre"])))
+                self.tablaObservaciones.setItem(i,1,QStandardItem(str(archivos[i]["nombreHoja"])))
+                self.tablaObservaciones.setItem(i,2,QStandardItem(str(archivos[i]["observaciones"])))
+                self.tablaObservaciones.setItem(i,3,QStandardItem(str(archivos[i]["tramo"])))
+                self.tablaObservaciones.setItem(i,4,QStandardItem(str(archivos[i]["zona"])))
+                self.tablaObservaciones.setItem(i,5,QStandardItem(str(archivos[i]["grupo"])))
 
-            self.vista.ui.tblTablaErrores.resizeColumnsToContents()
-            self.vista.ui.tblTablaErrores.resizeRowsToContents()
+            self.vista.ui.tblVerObservaciones.resizeColumnsToContents()
+            self.vista.ui.tblVerObservaciones.resizeRowsToContents()
 
     def seleccionarArchivo(self):
         self.vista.ui.tblTablaErrores.setModel(None)
         self.archivo, ok = QFileDialog.getOpenFileName(self, "Seleccionar archivo", r"<Default dir>", "Archivos excel (*.xlsx)")
         if ok:
             
-            self.setCabeceras()
+            self.setCabecerasTablaErrores()
             self.modelo.archivos_excel = [self.archivo]
             columnasConErrores = self.modelo.leerColumna(2)
         
@@ -162,5 +227,3 @@ class Controlador(QWidget):
 
             self.vista.ui.tblTablaErrores.resizeColumnsToContents()
             self.vista.ui.tblTablaErrores.resizeRowsToContents()
-
-
