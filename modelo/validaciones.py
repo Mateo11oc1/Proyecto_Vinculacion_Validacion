@@ -29,8 +29,8 @@ from geopy.geocoders import Nominatim
 class Validaciones:
 
     def __init__(self):
-        self.ruta_access=r"G:\Mi unidad\U\OficialVinculacion\Vinculacion.accdb" 
-        #cambiar segun la ubicacion del archivo
+        self.ruta_access=r"./Vinculacion.accdb" 
+        #cambiar segun el nombre del archivo, la ruta es relativa
         # self.carpetaExcel = "../"
         self.archivos_excel = []
         self.workbook = None
