@@ -90,7 +90,7 @@ class Validaciones:
             # Eliminar espacios en blanco al inicio y al final de cada calle
             calles = [calle.strip() for calle in calles if calle and calle.strip()]
             
-            return {"calle principal":str(hoja.iloc[2,12]), "calles secundarias": tuple(calles), "tramo": hoja.iloc[1,12], "hoja": nombre_hoja, "nombre de archivo": nombre_archivo}
+            return {"calle principal":str(hoja.iloc[2,12]), "calles secundarias": calles, "tramo": hoja.iloc[1,12], "hoja": nombre_hoja, "nombre de archivo": nombre_archivo}
 
     
     #Devuelve la columna como un diccionario de acuerdo a los parametros
@@ -101,7 +101,6 @@ class Validaciones:
         self.columnasConErrores = []
         self.columnasConCorrecciones=[]
         #Recorro todos los archivos, i-> nombreArchivo
-        #print(self.archivos_excel)
         for i in self.archivos_excel:
             
             try:
@@ -128,14 +127,12 @@ class Validaciones:
                             
                             if columna != None:
                                 print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}\nAtractor: {columna["atractor"]}')
-                                #print(columna)
                                 self.listaColumnas.append(columna)
                                 valida = 0
                                 for error in columna["listaErrores"].values():
                                     if error:
                                         valida = 1
                                         self.columnasConErrores.append(columna)
-                                        print(len(self.columnasConErrores))
                                         break
                                 
                                 for correccion in columna["listaCorrecciones"].values():
@@ -150,7 +147,7 @@ class Validaciones:
                         self.listaFormatoIncorrecto.append(malformato)
                     
             except Exception as e:
-                print(f"Error al leer el archivo {i}\n {e}")
+                print(f"Ocurrio una excpecion:", str(e))
                 #time.sleep(5)
             
         self.almacenarErrores()
@@ -169,17 +166,29 @@ class Validaciones:
     def compararCalles(self, callesTramo: dict):
         
         geolocator = Nominatim(user_agent="OficialVinculacion")  # Especifica un nombre de agente personalizado
-        location = geolocator.geocode(callesTramo["calle principal"] + ', Cuenca, Ecuador')
+        location = geolocator.geocode(callesTramo["calle principal"]  + ', Cuenca, Ecuador')
     
         if location:
-            print("Calle: ", callesTramo["calle principal"])
+            print("Calle principal: ", callesTramo["calle principal"])
             print('Calle de API:', location.address)
-            
             print('Latitud:', location.latitude)
             print('Longitud:', location.longitude)
-            # time.sleep(7)
+
         else:
-            print('No se encontró la calle.')
+            print('No se encontró la calle '+callesTramo["calle principal"])
+        
+        for secundaria in callesTramo["calles secundarias"]:
+            
+            location = geolocator.geocode(secundaria  + ', Cuenca, Ecuador')
+        
+            if location:
+                print("Calle secundaria: ", secundaria)
+                print('Calle de API:', location.address)
+                print('Latitud:', location.latitude)
+                print('Longitud:', location.longitude)
+                
+            else:
+                print('No se encontró la calle '+secundaria)
         
         
     def almacenarErrores(self):
@@ -263,7 +272,6 @@ class Validaciones:
         self.listaColumnas = []
         self.archivoConObservaciones = []
         #Recorro todos los archivos
-        print(self.archivos_excel)
         for i in self.archivos_excel:
             #Leo todas las hojas de una vez del documento
             try:
@@ -377,9 +385,6 @@ class Validaciones:
 
         if math.isnan(columna["numAtractores"]):
             print("Corrigiendo numero de atractores...")
-        
-            # abrir el archivo
-            print(columna["archivoRuta"])
             
             # abre la aplicación de Excel en segundo plano
             app = xlwings.App(visible=False)
@@ -453,8 +458,6 @@ class Validaciones:
                 
             if not math.isnan(columna["jornada"][0]) and not math.isnan(columna["jornada"][1]) and columna["jornada"][0] == columna["numAtractores"] and columna["jornada"][1] == columna["numAtractores"]:
                 print("Corrigiendo diurno...")
-                # abrir el archivo
-                print(columna["archivoRuta"])
 
                 # abre la aplicación de Excel en segundo plano
                 app = xlwings.App(visible=False)
@@ -532,8 +535,6 @@ class Validaciones:
             #es igual al numero de atractores
             if all(dia == columna["numAtractores"]  for dia in columna["dias"][:5]) and all(math.isnan(dia) for dia in columna["dias"][5:]):
                 print("Corrigiendo entre semana...")
-                # abrir el archivo
-                print(columna["archivoRuta"])
                             
                 # abre la aplicación de Excel en segundo plano
                 app = xlwings.App(visible=False)
@@ -573,7 +574,6 @@ class Validaciones:
         validado = validar(columna)
         if not validado[0]:
             print("Corrigiendo viviendas...")
-            print(columna["archivoRuta"])
                             
             # abre la aplicación de Excel en segundo plano
             app = xlwings.App(visible=False)
