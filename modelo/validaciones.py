@@ -100,6 +100,7 @@ class Validaciones:
         self.listaColumnas = []
         self.columnasConErrores = []
         self.columnasConCorrecciones=[]
+        self.hojasConCallesInvalidas=[]
         #Recorro todos los archivos, i-> nombreArchivo
         for i in self.archivos_excel:
             
@@ -140,7 +141,7 @@ class Validaciones:
                                         self.columnasConCorrecciones.append(columna)
                                         break
                         
-                        #self.compararCalles(self.almacenarCalles_Tramo(hoja, i, nombreHoja))    
+                        self.compararCalles(self.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))    
                     
                     else:
                         malformato={"nombre_archivo":os.path.basename(i),"nombre_hoja": nombreHoja }
@@ -151,7 +152,7 @@ class Validaciones:
                 #time.sleep(5)
             
         self.almacenarErrores()
-        return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto
+        return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas
     
     def crearConexionBDD(self):
         
@@ -176,6 +177,8 @@ class Validaciones:
 
         else:
             print('No se encontró la calle '+callesTramo["calle principal"])
+            calle_mal={"nombre_archivo": callesTramo["nombre de archivo"], "nombre_hoja": callesTramo["hoja"], "calle": callesTramo["calle principal"], "tipo": "principal"}
+            self.hojasConCallesInvalidas.append(calle_mal)
         
         for secundaria in callesTramo["calles secundarias"]:
             
@@ -189,6 +192,8 @@ class Validaciones:
                 
             else:
                 print('No se encontró la calle '+secundaria)
+                calle_mal={"nombre_archivo": callesTramo["nombre de archivo"], "nombre_hoja": callesTramo["hoja"], "calle": secundaria, "tipo": "secundaria"}
+                self.hojasConCallesInvalidas.append(calle_mal)
         
         
     def almacenarErrores(self):

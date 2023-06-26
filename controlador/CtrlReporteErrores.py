@@ -47,10 +47,11 @@ class Controlador(QWidget):
             mensaje=QMessageBox()
             mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
             mensaje.exec()
-            columnasConErrores, columnasConCorrecciones, hojas_mal_formato = self.modelo.leerColumna(1)
+            columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas = self.modelo.leerColumna(1)
             self.llenarTablaErrores(columnasConErrores)
             self.llenarTablaCorrecciones(columnasConCorrecciones)
             self.llenarTablaMalFormato(hojas_mal_formato)
+            self.llenarTablaCallesMalEscritas(calles_invalidas)
             
 
     def llenarTablaErrores(self, columnasConErrores):
@@ -85,20 +86,40 @@ class Controlador(QWidget):
             self.tablaCorreccion.setItem(i,6,QStandardItem(str(columnasConCorrecciones[i]["grupo"])))
 
 
-        self.vista.ui.tblTablaCorreciones.resizeColumnsToContents()
         self.vista.ui.tblTablaCorreciones.resizeRowsToContents()
+
 
     def llenarTablaMalFormato(self, malformato):
         tablaMalFormato = QStandardItemModel()
         tablaMalFormato.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja"])
-        self.vista.ui.tblFormatoIncorrecto.setModel(tablaMalFormato)
-        cabecera = self.vista.ui.tblFormatoIncorrecto.horizontalHeader()
+        self.vista.ui.tblFormatoIncorrecto_2.setModel(tablaMalFormato)
+        cabecera = self.vista.ui.tblFormatoIncorrecto_2.horizontalHeader()
         cabecera.resizeSection(0,450)
         cabecera.resizeSection(1,250)
 
         for i in range(len(malformato)):
             tablaMalFormato.setItem(i,0,QStandardItem(str(malformato[i]["nombre_archivo"])))
             tablaMalFormato.setItem(i,1,QStandardItem(str(malformato[i]["nombre_hoja"])))
+
+    def llenarTablaCallesMalEscritas(self, calles):
+        tablaCalles = QStandardItemModel()
+        tablaCalles.setHorizontalHeaderLabels(["Nombre archivo", "Nombre de hoja", "Calle no reconocida", "Tipo de calle"])
+        self.vista.ui.tblCallesNoReconocidas.setModel(tablaCalles)
+        cabecera = self.vista.ui.tblCallesNoReconocidas.horizontalHeader()
+        cabecera.resizeSection(0,450)
+        cabecera.resizeSection(1,250)
+        cabecera.resizeSection(1,500)
+        cabecera.resizeSection(1,231)
+
+        for i in range(len(calles)):
+            tablaCalles.setItem(i,0,QStandardItem(str(calles[i]["nombre_archivo"])))
+            tablaCalles.setItem(i,1,QStandardItem(str(calles[i]["nombre_hoja"])))
+            tablaCalles.setItem(i,2,QStandardItem(str(calles[i]["calle"])))
+            tablaCalles.setItem(i,3,QStandardItem(str(calles[i]["tipo"])))
+        
+        self.vista.ui.tblTablaErrores.resizeColumnsToContents()
+        self.vista.ui.tblTablaErrores.resizeRowsToContents()
+            
 
 
     def detalleErrores(self, listaErrores):
@@ -172,7 +193,7 @@ class Controlador(QWidget):
         cabecera.resizeSection(0,120)
         cabecera.resizeSection(1,120)
         cabecera.resizeSection(2,100)
-        cabecera.resizeSection(3,660)
+        cabecera.resizeSection(3,560)
         cabecera.resizeSection(4,70)
         cabecera.resizeSection(5,70)
         cabecera.resizeSection(6,70)
@@ -212,8 +233,9 @@ class Controlador(QWidget):
             
             self.setCabecerasTablaErrores()
             self.modelo.archivos_excel = [self.archivo]
-            columnasConErrores, columnasConCorrecciones, hojas_mal_formato = self.modelo.leerColumna(2)
+            columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas = self.modelo.leerColumna(2)
             self.llenarTablaErrores(columnasConErrores)
             self.llenarTablaCorrecciones(columnasConCorrecciones)
             self.llenarTablaMalFormato(hojas_mal_formato)
+            self.llenarTablaCallesMalEscritas(calles_invalidas)
         

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'reportes-errores2.ui'
+# Form implementation generated from reading ui file 'reportes-errores.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -61,12 +61,11 @@ class Ui_MainWindow(object):
         self.btnSeleccionarArchivo.setIconSize(QtCore.QSize(50, 50))
         self.btnSeleccionarArchivo.setObjectName("btnSeleccionarArchivo")
         self.label_17 = QtWidgets.QLabel(self.frame)
-        self.label_17.setGeometry(QtCore.QRect(550, 310, 821, 71))
+        self.label_17.setGeometry(QtCore.QRect(450, 310, 821, 71))
         font = QtGui.QFont()
         font.setPointSize(22)
         font.setBold(True)
         font.setWeight(75)
-        font.setFamily("Arial Black")
         self.label_17.setFont(font)
         self.label_17.setStyleSheet("color: rgb(255, 255, 255);")
         self.label_17.setObjectName("label_17")
@@ -77,7 +76,6 @@ class Ui_MainWindow(object):
         font.setPointSize(11)
         self.textAreaIndicaciones.setFont(font)
         self.textAreaIndicaciones.setMouseTracking(False)
-        self.textAreaIndicaciones.setEnabled(False)
         self.textAreaIndicaciones.setStyleSheet("background-color: rgb(255,255,255);\n"
 "border-radius:15;\n"
 "")
@@ -96,12 +94,11 @@ class Ui_MainWindow(object):
         self.label_8.setPixmap(QtGui.QPixmap("./imagenes/Recurso 6-100.jpg"))
         self.label_8.setObjectName("label_8")
         self.label_11 = QtWidgets.QLabel(self.frame_2)
-        self.label_11.setGeometry(QtCore.QRect(375, 20, 821, 71))
+        self.label_11.setGeometry(QtCore.QRect(240, 20, 821, 71))
         font = QtGui.QFont()
         font.setPointSize(22)
         font.setBold(True)
         font.setWeight(75)
-        font.setFamily("Arial Black")
         self.label_11.setFont(font)
         self.label_11.setStyleSheet("color: rgb(255, 255, 255);")
         self.label_11.setObjectName("label_11")
@@ -111,16 +108,16 @@ class Ui_MainWindow(object):
         self.label_12.setPixmap(QtGui.QPixmap("./imagenes/carro.png"))
         self.label_12.setObjectName("label_12")
         self.label_15 = QtWidgets.QLabel(self.frame_2)
-        self.label_15.setGeometry(QtCore.QRect(950, 460, 451, 311))
+        self.label_15.setGeometry(QtCore.QRect(790, 460, 451, 311))
         self.label_15.setText("")
         self.label_15.setPixmap(QtGui.QPixmap("./imagenes/moto.png"))
         self.label_15.setObjectName("label_15")
-        self.tblFormatoIncorrecto = QtWidgets.QTableView(self.frame_2)
-        self.tblFormatoIncorrecto.setGeometry(QtCore.QRect(325, 100, 700, 591))
-        self.tblFormatoIncorrecto.setStyleSheet("background-color: rgb(255,255,255);\n"
+        self.tblFormatoIncorrecto_2 = QtWidgets.QTableView(self.frame_2)
+        self.tblFormatoIncorrecto_2.setGeometry(QtCore.QRect(325, 100, 700, 591))
+        self.tblFormatoIncorrecto_2.setStyleSheet("background-color: rgb(255,255,255);\n"
 "border-radius:15;\n"
 "")
-        self.tblFormatoIncorrecto.setObjectName("tblFormatoIncorrecto")
+        self.tblFormatoIncorrecto_2.setObjectName("tblFormatoIncorrecto_2")
         self.tab_widget.addTab(self.tab_4, "")
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
@@ -152,12 +149,11 @@ class Ui_MainWindow(object):
 "")
         self.tblTablaErrores.setObjectName("tblTablaErrores")
         self.label_4 = QtWidgets.QLabel(self.fondoErrores)
-        self.label_4.setGeometry(QtCore.QRect(450, 30, 471, 51))
+        self.label_4.setGeometry(QtCore.QRect(370, 30, 471, 51))
         font = QtGui.QFont()
         font.setPointSize(22)
         font.setBold(True)
         font.setWeight(75)
-        font.setFamily("Arial Black")
         self.label_4.setFont(font)
         self.label_4.setStyleSheet("color: rgb(255, 255, 255);")
         self.label_4.setObjectName("label_4")
@@ -200,12 +196,11 @@ class Ui_MainWindow(object):
         self.label_9.setPixmap(QtGui.QPixmap("./imagenes/Recurso 6-100.jpg"))
         self.label_9.setObjectName("label_9")
         self.label_10 = QtWidgets.QLabel(self.frame_3)
-        self.label_10.setGeometry(QtCore.QRect(450, 30, 581, 51))
+        self.label_10.setGeometry(QtCore.QRect(400, 30, 581, 51))
         font = QtGui.QFont()
         font.setPointSize(22)
         font.setBold(True)
         font.setWeight(75)
-        font.setFamily("Arial Black")
         self.label_10.setFont(font)
         self.label_10.setStyleSheet("color: rgb(255, 255, 255);")
         self.label_10.setObjectName("label_10")
@@ -226,6 +221,34 @@ class Ui_MainWindow(object):
 "")
         self.tblTablaCorreciones.setObjectName("tblTablaCorreciones")
         self.tab_widget.addTab(self.tab_3, "")
+        self.tab_6 = QtWidgets.QWidget()
+        self.tab_6.setObjectName("tab_6")
+        self.frame_5 = QtWidgets.QFrame(self.tab_6)
+        self.frame_5.setGeometry(QtCore.QRect(0, 0, 1301, 791))
+        self.frame_5.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self.frame_5.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
+        self.frame_5.setObjectName("frame_5")
+        self.label_18 = QtWidgets.QLabel(self.frame_5)
+        self.label_18.setGeometry(QtCore.QRect(0, 0, 1291, 791))
+        self.label_18.setText("")
+        self.label_18.setPixmap(QtGui.QPixmap("./imagenes/Recurso 6-100.jpg"))
+        self.label_18.setObjectName("label_18")
+        self.label_19 = QtWidgets.QLabel(self.frame_5)
+        self.label_19.setGeometry(QtCore.QRect(410, 20, 581, 51))
+        font = QtGui.QFont()
+        font.setPointSize(22)
+        font.setBold(True)
+        font.setWeight(75)
+        self.label_19.setFont(font)
+        self.label_19.setStyleSheet("color: rgb(255, 255, 255);")
+        self.label_19.setObjectName("label_19")
+        self.tblCallesNoReconocidas = QtWidgets.QTableView(self.frame_5)
+        self.tblCallesNoReconocidas.setGeometry(QtCore.QRect(50, 90, 1181, 591))
+        self.tblCallesNoReconocidas.setStyleSheet("background-color: rgb(255,255,255);\n"
+"border-radius:15;\n"
+"")
+        self.tblCallesNoReconocidas.setObjectName("tblCallesNoReconocidas")
+        self.tab_widget.addTab(self.tab_6, "")
         self.tab_5 = QtWidgets.QWidget()
         self.tab_5.setObjectName("tab_5")
         self.frame_4 = QtWidgets.QFrame(self.tab_5)
@@ -247,7 +270,7 @@ class Ui_MainWindow(object):
         self.btnVerObservaciones.setIconSize(QtCore.QSize(50, 50))
         self.btnVerObservaciones.setObjectName("btnVerObservaciones")
         self.tblVerObservaciones = QtWidgets.QTableView(self.frame_4)
-        self.tblVerObservaciones.setGeometry(QtCore.QRect(40, 140, 1195, 591))
+        self.tblVerObservaciones.setGeometry(QtCore.QRect(40, 140, 1181, 591))
         self.tblVerObservaciones.setStyleSheet("background-color: rgb(255,255,255);\n"
 "border-radius:15;\n"
 "")
@@ -282,6 +305,7 @@ class Ui_MainWindow(object):
 "<ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Archivos con formato erróneo: Nombre de archivo y nombre de hoja que tienen un formato diferente. De las hojas Excel con formato erróneo, no se realizarán validaciones de ningún tipo.  </li>\n"
 "<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Reporte de errores: Tabla que contiene nombre de archivo, nombre de hoja, nombre de atractor, lista de errores que presenta, zona, grupo y tramo.  </li>\n"
 "<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Reporte de correcciones: Tabla que contiene los mismos encabezados de reporte de Errores. Pero que informa las correcciones que el programa ha realizado en los archivos. Para mayor información de las correcciones, se recomienda ver los manuales de usuario que han sido presentados.  </li>\n"
+"<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Calles no reconocidas: Se encuentra una tabla que detalla nombre de archivo y nombre de la hoja que contiene calles que no se han podido reconocer ni encontrar una similitud aparente.</li>\n"
 "<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Ver observaciones: En esta opción usted podrá seleccionar una carpeta que contenga formularios, de los cuales se mostrarán las Observaciones recolectadas.</li></ul>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:1; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Los errores y las correcciones se guardan a su vez en una base de datos de Validaciones contenida en el archivo denominado Vinculacion.accdb.</p>\n"
@@ -300,10 +324,11 @@ class Ui_MainWindow(object):
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_2), _translate("MainWindow", "Reporte de errores"))
         self.label_10.setText(_translate("MainWindow", " REPORTE DE CORRECCIONES"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_3), _translate("MainWindow", "Reporte de correcciones"))
+        self.label_19.setText(_translate("MainWindow", "CALLES NO RECONOCIDAS"))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_6), _translate("MainWindow", "Calles no reconocidas"))
         self.btnVerObservaciones.setToolTip(_translate("MainWindow", "Al dar clic, podrá observar las observaciones que tienen los tramos de manera resumida en la tabla "))
         self.btnVerObservaciones.setText(_translate("MainWindow", "Ver observaciones"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_5), _translate("MainWindow", "Ver observaciones"))
-        self.tab
 
 class Ventana(QtWidgets.QMainWindow):
     
