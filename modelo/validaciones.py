@@ -10,6 +10,7 @@ import pyodbc
 import pickle
 import re
 from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #diccionario de errores:
 #1. Se han ingresado caracteres o decimales
@@ -102,6 +103,7 @@ class Validaciones:
         self.columnasConCorrecciones=[]
         self.hojasConCallesInvalidas=[]
         #Recorro todos los archivos, i-> nombreArchivo
+        print(self.archivos_excel)
         for i in self.archivos_excel:
             
             try:
@@ -140,17 +142,19 @@ class Validaciones:
                                     if correccion:
                                         self.columnasConCorrecciones.append(columna)
                                         break
-                        
-                        self.compararCalles(self.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))    
-                    
+                        try:
+                            self.compararCalles(self.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))    
+                        except Exception as e:
+                            print(f"Ocurrio una excepcion:", str(e))
                     else:
                         malformato={"nombre_archivo":os.path.basename(i),"nombre_hoja": nombreHoja }
                         self.listaFormatoIncorrecto.append(malformato)
                     
             except Exception as e:
-                print(f"Ocurrio una excpecion:", str(e))
+                print(f"Ocurrio una excepcion:", str(e))
                 #time.sleep(5)
-            
+
+        self.generarArchivoLog()    
         self.almacenarErrores()
         return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas
     
@@ -163,11 +167,20 @@ class Validaciones:
     def cerrarConexion(self):
         self.cursorBDD.close()
         self.connBDD.close()
-        
-    def compararCalles(self, callesTramo: dict):
-        
+    
+    def buscar_direccion(self, direccion):
         geolocator = Nominatim(user_agent="OficialVinculacion")  # Especifica un nombre de agente personalizado
-        location = geolocator.geocode(callesTramo["calle principal"]  + ', Cuenca, Ecuador')
+        while True:
+            try:
+                location = geolocator.geocode(direccion + ', Cuenca, Ecuador')
+                return location
+            except GeocoderTimedOut:
+                print("Tiempo de espera agotado. Reintentando después de 5 segundos...")
+                time.sleep(5)  # Esperar 5 segundos antes de volver a intentar
+
+    def compararCalles(self, callesTramo: dict):
+                
+        location = self.buscar_direccion(callesTramo["calle principal"])
     
         if location:
             print("Calle principal: ", callesTramo["calle principal"])
@@ -182,7 +195,7 @@ class Validaciones:
         
         for secundaria in callesTramo["calles secundarias"]:
             
-            location = geolocator.geocode(secundaria  + ', Cuenca, Ecuador')
+            location = self.buscar_direccion(secundaria)
         
             if location:
                 print("Calle secundaria: ", secundaria)
@@ -195,7 +208,24 @@ class Validaciones:
                 calle_mal={"nombre_archivo": callesTramo["nombre de archivo"], "nombre_hoja": callesTramo["hoja"], "calle": secundaria, "tipo": "secundaria"}
                 self.hojasConCallesInvalidas.append(calle_mal)
         
-        
+    def generarArchivoLog(self):
+
+        cont=0
+
+        cadenaEscribir = ""
+        for calle in self.hojasConCallesInvalidas:
+            cont+=1
+            cadenaEscribir = (
+                cadenaEscribir + str(cont)+"\n" + "Nombre del archivo: "+ str(calle["nombre de archivo"])+"\n" 
+                + "Nombre de la hoja: " + str(calle["nombre_hoja"])+"\n" + "Calle: "
+                + str(calle["calle"])+"\n" + "Tipo calle: "+str(calle["tipo"]) +"\n"
+                + "------------------------------------------------------------------------------------------------------------\n"
+                )  
+
+        with open("callesInvalidas.log", "w") as archivo:
+            archivo.write(cadenaEscribir)
+            archivo.close()
+
     def almacenarErrores(self):
         self.crearConexionBDD()
         self.cursorBDD.execute("DELETE FROM detallescolumna")

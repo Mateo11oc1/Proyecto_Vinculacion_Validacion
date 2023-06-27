@@ -40,7 +40,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -301,9 +301,9 @@ p, li { white-space: pre-wrap; }
       <widget class="QTableView" name="tblFormatoIncorrecto_2">
        <property name="geometry">
         <rect>
-         <x>50</x>
+         <x>230</x>
          <y>100</y>
-         <width>1181</width>
+         <width>771</width>
          <height>591</height>
         </rect>
        </property>
