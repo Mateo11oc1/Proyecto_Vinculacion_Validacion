@@ -1,102 +1,67 @@
 import os
 import glob
 import pandas
-import textdistance
 import math
-import logging
 import time
 import xlwings 
-import pyodbc
-import pickle
 import re
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+from conectarBDD import BaseDatos
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
-#diccionario de errores:
-#1. Se han ingresado caracteres o decimales
-#2. En un atractor, hay datos de numero de atractores, jornada o dias pero los datos del tamanio estan vacios
-#3. La suma de los tamanios no coincide con el numero de atractores
-#4. En un atractor, hay datos de numero de atractores, tamanio o dias pero los datos de la jornada estan vacios
-#5. La suma de los datos de la jornada es menor al numero de atractores
-#Por ejemplo hay 3 atractores tipo Restaurante, se indica que hay 1 matutino y 1 nocturno, la suma de ambos es 2<al numero de atractores
-#6. Hay uno o varios datos de la jornada que sobrepasa el numero de atractores
-#Por ejemplo hay 3 atractores tipo Restaurante se indica que hay 4 diurnos lo cual es incorrecto
-#7. En un atractor, hay datos de numero de atractores, tamanio o jornada pero los datos de los dias estan vacios
-#8.Validar que uno o varios de los datos de los días de atención no sobrepasen el numero de atractores
-#La validacion 8 es igual a la 6 pero corresponde a los dias de atencion
-#9. Validar que la suma de todos los datos en dias no sea menor al numero de atractores
-#La validacion 9 es igual a la 5 pero corresponde a los dias de atencion
+#El detalle de los errores se encuentra en la variable de clase self.diccionarioErrores:
 
 class Validaciones:
 
     def __init__(self):
-        self.ruta_access=r"./Vinculacion.accdb" 
-        #cambiar segun el nombre del archivo, la ruta es relativa
-        # self.carpetaExcel = "../"
+        self.ruta_access=r"./Vinculacion.accdb"  #cambiar segun el nombre del archivo, la ruta es relativa
+        self.baseDatos = BaseDatos()
         self.archivos_excel = []
-        self.workbook = None
         self.diccionarioErrores={1:"Se han ingresado caracteres\n", 2:"Hay datos de numero de atractores, jornada o dias pero los datos del tamanio estan vacios\n",
                         3:"La suma de los tamanios no coincide con el numero de atractores\n", 4:"Hay datos de numero de atractores, tamanio o dias pero los datos de la jornada estan vacios\n",
                         5: "La suma de los datos de la jornada es menor al numero de atractores\n", 6:"Hay uno o varios datos de la jornada que sobrepasa el numero de atractores\n",
                         7: "Hay datos de numero de atractores, tamanio o jornada pero los datos de los dias estan vacios\n", 8:"Uno o varios de los datos de los días de atención sobrepasan el numero de atractores\n",
-                        9: "La suma de los datos de los dias es menor al numero de atractores\n"}
-        self.contadorCorrecciones=0
-        self.dataframe=pandas.read_excel("formato_archivos.xlsx", sheet_name="Hoja1")    
-        self.listaCallesTramo=[] #despues de que se ingresen las calles secundarias comentar esta linea de codigo
-        self.listaCallesSecundarias=[]
+                        9: "La suma de los datos de los dias es menor al numero de atractores\n"} 
+        self.listaCallesTramo=[] #contiene las calles principal y secundaria en un tramo(hoja) de una zona especifica(tramo)
 
-
-    #Obtengo una lista de todos lo archivos excel
     def leerCarpeta(self, carpeta):
         # Obtener todos los archivos en la carpeta que tengan la extensión .xlsx
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
         
-
     #este metodo valida que las hojas tengan formato correcto retornando True si hay un error de formato
     #un error de formato es si la tabla esta movida hacia arriba, abajo, derecha o izquierda
     def validarFormatoIncorrecto(self, nombre_hoja, nombre_archivo, hoja_leida):
         
         try:
             if hoja_leida.iloc[1,1]=="Grupo:" and hoja_leida.iloc[2,1]=="Zona:" and hoja_leida.iloc[6,2]=="Educación" and hoja_leida.iloc[9,1]=="# Atractores" and hoja_leida.iloc[7, 2]=="Escuela/Colegio":
-
                 pass
             else:
                 print("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
-                
                 return True
         except:
-            
             return True  
 
     def almacenarCalles_Tramo(self, hoja, nombre_archivo, nombre_hoja):
         calles_secundarias=str(hoja.iloc[3,14])
         #para separar las calles se consideran los siguientes separadores
-        # si hay una  " y " que separe las calles
-        # \* 0 o mas repeticiones de espacios en blanco antes y despues de la coma
-        # separaciones por guiones - y que despues haya una letra 
-        # separar por &
-        #separar por numeros con punto 1. 2. ->esto falta 
-        #separadas por /
-        #separadas por entre
-        #separadas por Y
-        #separadas por un numero seguido de )
-        separadores=[r'\by\b', r'\s*,\s*', r'\s*-\s*', r'\s*&\s*',  r'\d\.', r'\s*/\s*', r'\bentre\b', r'\bY\b', r'\d+\)']
+        # si hay una  " y ", " Y " , " entre ", " Entre " que separe las calles
+        # separaciones por guiones -, por amperson &, por slash /
+        #separar por numeros con punto 1. 2. o numero seguido de ) 1) 2)
+        separadores=[r'\by\b', r'\s*,\s*', r'\s*-\s*', r'\s*&\s*',  r'\d\.', r'\s*/\s*', r'\bentre\b', r'\bY\b', r'\d+\)', r'\bEntre\b']
         patron='|'.join(separadores) #une los separadores para dividir las calles si se cumple cualquier a de los patrones especificados 
         #patron contiene \by\b|\s*,\s*|\s*-\s*|\s*&\s*|\d\.|\s*\/\s*
-        calles = [] #para que no se repitan elementos sin Case sensitive
+        calles = [] 
         #si es que no esta vacia la celda de calles secundarias 
         if calles_secundarias!=None:
             calles=re.split(patron, str(calles_secundarias))
-
             # Eliminar espacios en blanco al inicio y al final de cada calle
             calles = [calle.strip() for calle in calles if calle and calle.strip()]
             
             return {"calle principal":str(hoja.iloc[2,12]), "calles secundarias": calles, "tramo": hoja.iloc[1,12], "hoja": nombre_hoja, "nombre de archivo": nombre_archivo}
-
     
-    #Devuelve la columna como un diccionario de acuerdo a los parametros
-    #opcion es para ver si se quiere retornar las columnas con errores o los archivos con observaciones
-    def leerColumna(self, opcion):
+
+    #opcion es para ver si se ha seleccionado un solo archivo(1) o una carpeta(2), este metodo es llamado desde el controlador
+    def procesar_archivos_excel(self, opcion):
         self.listaFormatoIncorrecto=[]
         self.listaColumnas = []
         self.columnasConErrores = []
@@ -113,28 +78,24 @@ class Validaciones:
                 #Recorro cada hoja del archivo
                 for nombreHoja, hoja in leido.items():
                     
-                    if not self.validarFormatoIncorrecto(nombreHoja, i, hoja):
-                        
+                    if not self.validarFormatoIncorrecto(nombreHoja, i, hoja): #si el formato de la hoja no es incorrecto
                         #Recorro cada columna
                         for columna in range(2, 55):
-                            #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor,
-                            # numero,dias,jornada, tamanio)
+                            #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor, numero,dias,jornada, tamanio)
                             lista = hoja.iloc[7:, columna].values.tolist()
                             columna = { "atractor": lista[0], "numAtractores":lista[2], "tamanio": lista[3:6], "jornada": lista[6:11],
                                     "dias": lista[12:22], "numColumna": columna, "hoja": numHoja, "archivoRuta": i, "archivoNombre": os.path.basename(i), 
                                     "vacia":False, "listaErrores":{1:False, 2:False,3:False,4:False,5:False, 6:False,7:False,8:False, 9:False}, "grupo": hoja.iloc[1, 2], "zona":hoja.iloc[2, 2], "tramo": hoja.iloc[1, 12],
                                     "observaciones":hoja.iloc[30,1], "nombreHoja": nombreHoja, "listaCorrecciones":{1:False, 2:False,3:False,4:False} }
                             #os.path.basename(i) es para q solo se escriba el nombre del archivo, no toda la ruta
-                            
+                            #inicializamos los valores de listaErrores y listaCorrecciones en False porque cambia a True si hay un error o se ha realizado una correccion
                             columna = self.validar(columna)
                             
-                            if columna != None:
+                            if columna != None: #si la columna no esta vacia
                                 print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}\nAtractor: {columna["atractor"]}')
                                 self.listaColumnas.append(columna)
-                                valida = 0
                                 for error in columna["listaErrores"].values():
-                                    if error:
-                                        valida = 1
+                                    if error: #si encuentra un True significa que hay al menos un error
                                         self.columnasConErrores.append(columna)
                                         break
                                 
@@ -153,19 +114,9 @@ class Validaciones:
                 print(f"Ocurrio una excepcion:", str(e))
                 #time.sleep(5)
 
-        self.generarArchivoLog()    
-        self.almacenarErrores()
+        self.generarArchivoLog()   #genera el archivo que contiene las calles no reconocidas 
+        self.baseDatos.almacenarErrores(self.ruta_access, self.columnasConErrores)
         return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas
-    
-    def crearConexionBDD(self):
-        
-        with pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ="+self.ruta_access) as self.connBDD:
-            # Crea un cursor para ejecutar consultas
-            self.cursorBDD = self.connBDD.cursor()
-        
-    def cerrarConexion(self):
-        self.cursorBDD.close()
-        self.connBDD.close()
     
     def buscar_direccion(self, direccion):
         
@@ -219,7 +170,7 @@ class Validaciones:
         
         
     def generarArchivoLog(self):
-
+        #metodo que genera un archivo log detallando archivo y hoja de las calles no reconocidas
         cont=0
 
         cadenaEscribir = ""
@@ -236,82 +187,6 @@ class Validaciones:
             archivo.write(cadenaEscribir)
             archivo.close()
 
-    def almacenarErrores(self):
-        self.crearConexionBDD()
-        self.cursorBDD.execute("DELETE FROM detallescolumna")
-        self.cursorBDD.execute("DELETE FROM error_detalle")
-        
-        for columna in self.columnasConErrores:
-            iterador=0
-            try:
-                datosInsercion = (
-                    columna["archivoNombre"], 
-                    columna["nombreHoja"], 
-                    columna["atractor"], 
-                    columna["zona"], 
-                    columna["grupo"]
-                )
-                print(datosInsercion)
-                self.cursorBDD.execute("INSERT INTO detallescolumna (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
-                
-                for valor in columna["listaErrores"].values():
-                    iterador+=1
-                    if valor:
-                            datosInsercion = (
-                                iterador, 
-                                columna["archivoNombre"], 
-                                columna["nombreHoja"], 
-                                columna["atractor"], 
-                            )
-                            print(datosInsercion)
-                            self.cursorBDD.execute("INSERT INTO error_detalle (idError, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
-                            
-                            self.connBDD.commit()
-                        
-            except pyodbc.Error as e:
-                logging.error("Error: %s", e)
-                self.connBDD.rollback()
-                                
-        self.cerrarConexion()
-                        
-            
-    def almacenarCorrecionesBDD(self, nombreCorreccion:str, columna):
-
-        self.crearConexionBDD()
-    
-        try:
-            self.cursorBDD.execute("SELECT id FROM correcciones WHERE descripcion = ?", nombreCorreccion)
-            res = list(self.cursorBDD.fetchall())
-            idCorrecion = res[0][0]
-            print("Id correccion: " + str(idCorrecion))
-        
-            datosInsercion = (
-                columna["archivoNombre"], 
-                columna["nombreHoja"], 
-                columna["atractor"], 
-                columna["zona"], 
-                columna["grupo"]
-            )
-            print(datosInsercion)
-                        
-            self.cursorBDD.execute("INSERT INTO DetalleCol_Correcciones (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
-                        
-            datosInsercion = (
-                idCorrecion,
-                columna["archivoNombre"], 
-                columna["nombreHoja"], 
-                columna["atractor"], 
-            )
-                        
-            self.cursorBDD.execute("INSERT INTO correccion_detalle (idCorreccion, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
-                        
-            self.connBDD.commit()
-        except pyodbc.Error as e:
-            print(datosInsercion)
-            # time.sleep(10)
-            logging.error("Error al ejecutar la consulta: %s", e)
-            self.connBDD.rollback()
-        self.cerrarConexion()
 
     def verObservacionesArchivos(self)->list:
         self.listaColumnas = []
@@ -375,7 +250,6 @@ class Validaciones:
             #se condiciona que no sea NaN porque puede haber una celda vacia en numero de atractores que contenga
             #datos en el resto de la columna y que tenga que ser validado despues, entonces no debe entrar al if
             if isinstance(columna["numAtractores"], float) and not math.isnan(columna["numAtractores"]):
-
                 #Esto reporta en consola como si fuera un error
                 #logging.error("Numero de atractores no es un entero")
                 columna["listaErrores"][1] = True
@@ -432,23 +306,19 @@ class Validaciones:
             print("Corrigiendo numero de atractores...")
             
             # abre la aplicación de Excel en segundo plano
-            app = xlwings.App(visible=False)
-            
+            app = xlwings.App(visible=False)            
             # abrir el archivo
             wb = xlwings.Book(columna["archivoRuta"])
-
             # seleccionar la hoja
             hoja = wb.sheets[columna["nombreHoja"]]
-
             # modificar el valor de una celda
             hoja.cells(11, columna["numColumna"]+1).value = sum(x for x in columna['tamanio'] if not math.isnan(x))
-
             # guarda los cambios y cierra excel
             wb.save()
             wb.close()
             app.quit()
 
-            self.almacenarCorrecionesBDD("Se ha escrito el número de atractores en #Atractores", columna)
+            self.baseDatos.almacenarCorreccionesBDD("Se ha escrito el número de atractores en #Atractores", columna)
             columna["listaCorrecciones"][1] = True
 
 
@@ -470,6 +340,7 @@ class Validaciones:
 
 
     #Validar que la suma de todos los datos en jornada no sea menor al numero de atractores
+    #Por ejemplo hay 3 atractores tipo Restaurante, se indica que hay 1 matutino y 1 nocturno, la suma de ambos es 2<al numero de atractores
     def validarSumaJornada(self, columna:dict) -> list:
 
         #si el numero de atractores es mayor a la suma de los valores del jornada
@@ -482,8 +353,8 @@ class Validaciones:
 
 
     #Validar que uno o varios de los datos de la jornada no sobrepase el numero de atractores
-    #No se valida que esto se cumpla con la suma de los datos de la jornada debido a que se puede tener un atractor
-    #que sea matutino y nocturno a la vez
+    #No se valida que esto se cumpla con la suma de los datos de la jornada debido a que se puede tener un atractor que sea matutino y nocturno a la vez
+    #Por ejemplo hay 3 atractores tipo Restaurante se indica que hay 4 diurnos lo cual es incorrecto
     def validarJornadaNoSobrepaseAtractores(self, columna:dict) -> list:
         for i in columna['jornada']:
             if columna["numAtractores"] < i:
@@ -523,11 +394,8 @@ class Validaciones:
                 wb.close()
                 app.quit()
 
-                self.almacenarCorrecionesBDD("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna)
-                columna["listaCorrecciones"][2] = True
-
-            
-                
+                self.baseDatos.almacenarCorreccionesBDD("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna)
+                columna["listaCorrecciones"][2] = True               
             
     #Valida que los datos de dias, no estan vacios
     def validarDiasDatosVacios(self, columna: dict) -> list:
@@ -544,7 +412,6 @@ class Validaciones:
         if bandera == 0:
             columna["listaErrores"][7] = True
             return [columna, True]
-
 
     #Validar que uno o varios de los datos de los días de atención no sobrepasen el numero de atractores
     #No se valida que esto se cumpla con la suma de los datos de los días de atención debido a que se puede tener un atractor
@@ -603,7 +470,7 @@ class Validaciones:
                 wb.close()
                 app.quit()
 
-                self.almacenarCorrecionesBDD("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
+                self.baseDatos.almacenarCorreccionesBDD("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
                 columna["listaCorrecciones"][3] = True
 
     # Verifica y modifica si hay datos escritos en filas de abajo en las columnas de vivienda
@@ -638,12 +505,11 @@ class Validaciones:
             wb.save()
             wb.close()
             app.quit()
-            self.almacenarCorrecionesBDD("Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", 
+            self.baseDatos.almacenarCorreccionesBDD("Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", 
                                                     columna)
             columna["listaCorrecciones"][4] = True
-            
-                        
-    
+
+
     #en esta funcion se llaman a todas las validacione,s optimizando su uso
     def validar(self, columna: dict):
 
