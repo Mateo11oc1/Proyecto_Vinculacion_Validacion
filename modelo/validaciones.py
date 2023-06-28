@@ -7,7 +7,7 @@ import xlwings
 import re
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
-from conectarBDD import BaseDatos
+from modelo.OperacionesBDD import BaseDatos
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #El detalle de los errores se encuentra en la variable de clase self.diccionarioErrores:
 
