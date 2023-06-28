@@ -8,6 +8,7 @@ import re
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 from modelo.OperacionesBDD import BaseDatos
+from tenacity import retry, stop_after_attempt, wait_fixed
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #El detalle de los errores se encuentra en la variable de clase self.diccionarioErrores:
 
@@ -118,6 +119,7 @@ class Validaciones:
         self.baseDatos.almacenarErrores(self.ruta_access, self.columnasConErrores)
         return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas
     
+    @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
     def buscar_direccion(self, direccion):
         
         try:
@@ -132,7 +134,6 @@ class Validaciones:
             print("Problema de GeocoderUnavailable: ")
             print(e)
             return None
-    
 
     def compararCalles(self, callesTramo: dict):
         
@@ -177,7 +178,7 @@ class Validaciones:
         for calle in self.hojasConCallesInvalidas:
             cont+=1
             cadenaEscribir = (
-                cadenaEscribir + str(cont)+"\n" + "Nombre del archivo: "+ str(calle["nombre de archivo"])+"\n" 
+                cadenaEscribir + str(cont)+"\n" + "Nombre del archivo: "+ str(calle["nombre_archivo"])+"\n" 
                 + "Nombre de la hoja: " + str(calle["nombre_hoja"])+"\n" + "Calle: "
                 + str(calle["calle"])+"\n" + "Tipo calle: "+str(calle["tipo"]) +"\n"
                 + "------------------------------------------------------------------------------------------------------------\n"
