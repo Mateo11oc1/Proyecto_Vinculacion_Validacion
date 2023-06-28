@@ -10,7 +10,7 @@ import pyodbc
 import pickle
 import re
 from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #diccionario de errores:
 #1. Se han ingresado caracteres o decimales
@@ -142,10 +142,9 @@ class Validaciones:
                                     if correccion:
                                         self.columnasConCorrecciones.append(columna)
                                         break
-                        try:
-                            self.compararCalles(self.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))    
-                        except Exception as e:
-                            print(f"Ocurrio una excepcion:", str(e))
+                    
+                        self.compararCalles(self.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))    
+                    
                     else:
                         malformato={"nombre_archivo":os.path.basename(i),"nombre_hoja": nombreHoja }
                         self.listaFormatoIncorrecto.append(malformato)
@@ -169,16 +168,39 @@ class Validaciones:
         self.connBDD.close()
     
     def buscar_direccion(self, direccion):
-        geolocator = Nominatim(user_agent="OficialVinculacion")  # Especifica un nombre de agente personalizado
-        while True:
-            try:
-                location = geolocator.geocode(direccion + ', Cuenca, Ecuador')
-                return location
-            except GeocoderTimedOut:
-                print("Tiempo de espera agotado. Reintentando después de 5 segundos...")
-                time.sleep(5)  # Esperar 5 segundos antes de volver a intentar
+        
+        try:
+            geolocator = Nominatim(user_agent="proyecto_vinculacion")  # Especifica un nombre de agente personalizado
+            location = geolocator.geocode(direccion + ', Cuenca, Ecuador')
+            return location
+        except GeocoderTimedOut as e:
+            print("Problema de GeocoderTimedOut: ")
+            print(e)
+            return None
+        except GeocoderUnavailable as e:
+            print("Problema de GeocoderUnavailable: ")
+            print(e)
+            return None
+    
 
     def compararCalles(self, callesTramo: dict):
+        
+        def buscarCallesSecundarias(listaSecundarias: list):
+            
+            for secundaria in listaSecundarias:
+                location = self.buscar_direccion(secundaria)
+                if location:
+                    print("Calle secundaria: ", secundaria)
+                    print('Calle de API:', location.address)
+                    print('Latitud:', location.latitude)
+                    print('Longitud:', location.longitude)
+                    
+                else:
+                    print('No se encontró la calle '+secundaria)
+                    calle_mal={"nombre_archivo": callesTramo["nombre de archivo"], "nombre_hoja": callesTramo["hoja"], "calle": secundaria, "tipo": "secundaria"}
+                    self.hojasConCallesInvalidas.append(calle_mal)
+                
+        #------------------------------------------------------------------------------------------------------------------------------------------
                 
         location = self.buscar_direccion(callesTramo["calle principal"])
     
@@ -193,20 +215,8 @@ class Validaciones:
             calle_mal={"nombre_archivo": callesTramo["nombre de archivo"], "nombre_hoja": callesTramo["hoja"], "calle": callesTramo["calle principal"], "tipo": "principal"}
             self.hojasConCallesInvalidas.append(calle_mal)
         
-        for secundaria in callesTramo["calles secundarias"]:
-            
-            location = self.buscar_direccion(secundaria)
+        buscarCallesSecundarias(callesTramo["calles secundarias"])
         
-            if location:
-                print("Calle secundaria: ", secundaria)
-                print('Calle de API:', location.address)
-                print('Latitud:', location.latitude)
-                print('Longitud:', location.longitude)
-                
-            else:
-                print('No se encontró la calle '+secundaria)
-                calle_mal={"nombre_archivo": callesTramo["nombre de archivo"], "nombre_hoja": callesTramo["hoja"], "calle": secundaria, "tipo": "secundaria"}
-                self.hojasConCallesInvalidas.append(calle_mal)
         
     def generarArchivoLog(self):
 
