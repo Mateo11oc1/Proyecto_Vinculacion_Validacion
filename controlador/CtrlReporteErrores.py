@@ -47,7 +47,7 @@ class Controlador(QWidget):
             mensaje=QMessageBox()
             mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
             mensaje.exec()
-            columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas = self.modelo.leerColumna(1)
+            columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas = self.modelo.procesar_archivos_excel(1)
             self.llenarTablaErrores(columnasConErrores)
             self.llenarTablaCorrecciones(columnasConCorrecciones)
             self.llenarTablaMalFormato(hojas_mal_formato)
@@ -233,7 +233,7 @@ class Controlador(QWidget):
             
             self.setCabecerasTablaErrores()
             self.modelo.archivos_excel = [self.archivo]
-            columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas = self.modelo.leerColumna(2)
+            columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas = self.modelo.procesar_archivos_excel(2)
             self.llenarTablaErrores(columnasConErrores)
             self.llenarTablaCorrecciones(columnasConCorrecciones)
             self.llenarTablaMalFormato(hojas_mal_formato)
