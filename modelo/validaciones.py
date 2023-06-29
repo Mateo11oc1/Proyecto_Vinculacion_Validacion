@@ -24,7 +24,8 @@ class Validaciones:
                         7: "Hay datos de numero de atractores, tamanio o jornada pero los datos de los dias estan vacios\n", 8:"Uno o varios de los datos de los días de atención sobrepasan el numero de atractores\n",
                         9: "La suma de los datos de los dias es menor al numero de atractores\n"} 
         self.listaCallesTramo=[] #contiene las calles principal y secundaria en un tramo(hoja) de una zona especifica(tramo)
-
+        self.columnasSinErrores = []
+        
     def leerCarpeta(self, carpeta):
         # Obtener todos los archivos en la carpeta que tengan la extensión .xlsx
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
@@ -95,11 +96,16 @@ class Validaciones:
                             if columna != None: #si la columna no esta vacia
                                 print(f'---------\nArchivo: {columna["archivoNombre"]}\n Hoja: {columna["nombreHoja"]}\n Columna: {columna["numColumna"]}\nAtractor: {columna["atractor"]}')
                                 self.listaColumnas.append(columna)
+                                valida = 0
                                 for error in columna["listaErrores"].values():
                                     if error: #si encuentra un True significa que hay al menos un error
+                                        valida = 1
                                         self.columnasConErrores.append(columna)
                                         break
-                                
+                                    
+                                if columna not in self.columnasSinErrores and valida == 0:
+                                    self.columnasSinErrores.append(columna)
+                                    
                                 for correccion in columna["listaCorrecciones"].values():
                                     if correccion:
                                         self.columnasConCorrecciones.append(columna)
@@ -116,7 +122,8 @@ class Validaciones:
                 #time.sleep(5)
 
         self.generarArchivoLog()   #genera el archivo que contiene las calles no reconocidas 
-        self.baseDatos.almacenarErrores(self.ruta_access, self.columnasConErrores)
+        self.baseDatos.almacenarErrores(self.columnasConErrores)
+        self.baseDatos.insercionBDD(self.columnasSinErrores)
         return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas
     
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
