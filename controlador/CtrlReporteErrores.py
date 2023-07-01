@@ -59,8 +59,8 @@ class Controlador(QWidget):
     
         
         for i in range(len(columnasConErrores)):
-            self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["archivoNombre"])))
-            self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombreHoja"])))
+            self.tabla.setItem(i,0,QStandardItem(str(columnasConErrores[i]["nombre_archivo"])))
+            self.tabla.setItem(i,1,QStandardItem(str(columnasConErrores[i]["nombre_hoja"])))
             self.tabla.setItem(i,2,QStandardItem(str(columnasConErrores[i]["numColumna"])))
             self.tabla.setItem(i,3,QStandardItem(str(columnasConErrores[i]["atractor"])))
             self.tabla.setItem(i,4,QStandardItem(str(self.detalleErrores(columnasConErrores[i]["listaErrores"]))))
@@ -77,8 +77,8 @@ class Controlador(QWidget):
     
         
         for i in range(len(columnasConCorrecciones)):
-            self.tablaCorreccion.setItem(i,0,QStandardItem(str(columnasConCorrecciones[i]["archivoNombre"])))
-            self.tablaCorreccion.setItem(i,1,QStandardItem(str(columnasConCorrecciones[i]["nombreHoja"])))
+            self.tablaCorreccion.setItem(i,0,QStandardItem(str(columnasConCorrecciones[i]["nombre_archivo"])))
+            self.tablaCorreccion.setItem(i,1,QStandardItem(str(columnasConCorrecciones[i]["nombre_hoja"])))
             self.tablaCorreccion.setItem(i,2,QStandardItem(str(columnasConCorrecciones[i]["atractor"])))
             self.tablaCorreccion.setItem(i,3,QStandardItem(str(self.detalleCorrecciones(columnasConCorrecciones[i]["listaCorrecciones"]))))
             self.tablaCorreccion.setItem(i,4,QStandardItem(str(columnasConCorrecciones[i]["tramo"])))
@@ -216,8 +216,8 @@ class Controlador(QWidget):
             self.vista.ui.tblVerObservaciones.setModel(self.tablaObservaciones)
 
             for i in range(len(archivos)):
-                self.tablaObservaciones.setItem(i,0,QStandardItem(str(archivos[i]["archivoNombre"])))
-                self.tablaObservaciones.setItem(i,1,QStandardItem(str(archivos[i]["nombreHoja"])))
+                self.tablaObservaciones.setItem(i,0,QStandardItem(str(archivos[i]["nombre_archivo"])))
+                self.tablaObservaciones.setItem(i,1,QStandardItem(str(archivos[i]["nombre_hoja"])))
                 self.tablaObservaciones.setItem(i,2,QStandardItem(str(archivos[i]["observaciones"])))
                 self.tablaObservaciones.setItem(i,3,QStandardItem(str(archivos[i]["tramo"])))
                 self.tablaObservaciones.setItem(i,4,QStandardItem(str(archivos[i]["zona"])))
