@@ -125,8 +125,8 @@ class Validaciones:
                 #time.sleep(5)
         
         self.generarArchivoLog()   #genera el archivo que contiene las calles no reconocidas 
-        #self.baseDatos.almacenarErrores(self.columnasConErrores)
-        #self.baseDatos.insercionBDD(self.columnasSinErrores)
+        self.baseDatos.almacenarErrores(self.columnasConErrores)
+        self.baseDatos.insercionBDD(self.columnasSinErrores)
         self.reintentarConectarCalles()
         
 

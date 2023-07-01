@@ -26,8 +26,8 @@ class BaseDatos:
             iterador=0
             try:
                 datosInsercion = (
-                    columna["archivoNombre"], 
-                    columna["nombreHoja"], 
+                    columna["nombre_archivo"], 
+                    columna["nombre_hoja"], 
                     columna["atractor"], 
                     columna["zona"], 
                     columna["grupo"]
@@ -40,8 +40,8 @@ class BaseDatos:
                     if valor:
                             datosInsercion = (
                                 iterador, 
-                                columna["archivoNombre"], 
-                                columna["nombreHoja"], 
+                                columna["nombre_archivo"], 
+                                columna["nombre_hoja"], 
                                 columna["atractor"], 
                             )
                             print(datosInsercion)
@@ -67,8 +67,8 @@ class BaseDatos:
             print("Id correccion: " + str(idCorrecion))
         
             datosInsercion = (
-                columna["archivoNombre"], 
-                columna["nombreHoja"], 
+                columna["nombre_archivo"], 
+                columna["nombre_hoja"], 
                 columna["atractor"], 
                 columna["zona"], 
                 columna["grupo"]
@@ -79,8 +79,8 @@ class BaseDatos:
                         
             datosInsercion = (
                 idCorrecion,
-                columna["archivoNombre"], 
-                columna["nombreHoja"], 
+                columna["nombre_archivo"], 
+                columna["nombre_hoja"], 
                 columna["atractor"], 
             )
                         
