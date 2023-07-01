@@ -180,7 +180,35 @@ class BaseDatos:
             logging.error("Error al ejecutar la consulta: %s", e)
             return False
         
+    def separarTamanio(self, listaTamanios: list):
+        tamanioLetras = {}
+        contador = 0
+        tamanios = {0: "G", 1: "M", 2: "P"}
+    
+        for tam in listaTamanios:
+
+            if not math.isnan(tam):
+                tamanioLetras[tamanios[contador]] = tam
+            else:
+                tamanioLetras[tamanios[contador]] = 0
+            contador += 1
+        return tamanioLetras
+    
+    def insertarTablaOferta(self, listaTamanios: dict, columna: dict, idAtractor):
         
+        for tam, num in listaTamanios.items():
+            try:
+                if num > 0:
+                    datosInsercion = (columna["zona"], columna["hoja"], idAtractor, tam, num)
+                    print("Almacenar oferta: " + str(datosInsercion))
+                    self.cursorBDD.execute("INSERT INTO oferta (idZona, idTramo, idTipoAtractor, tamanio, cantidadAtractores) VALUES (?, ?, ?, ?, ?)", datosInsercion)
+                    
+            except pyodbc.Error as e:
+                print(datosInsercion)
+                # time.sleep(10)
+                logging.error("Error al ejecutar la consulta: %s", e)
+                
+    
     def insercionBDD(self, columnas_sin_errores: list):
         
         def consultarAtractor(atractor: str):
@@ -189,7 +217,10 @@ class BaseDatos:
             
             resultado = self.cursorBDD.fetchone()
             print(resultado)
-            return resultado[0]
+            if resultado:
+                return resultado[0]
+            else: 
+                return None
         
         def consultarCaracteristica():
             
@@ -213,11 +244,12 @@ class BaseDatos:
             try:
                 print(str(col) + "\n") 
                 self.almacenarTramo(col)
-                time.sleep(30)
+                # time.sleep(30)
                 self.almacenar_horario_jornada_tam(col)
-                time.sleep(30)
+                # time.sleep(30)
                 self.almacenarCaracteristica(tuple(consultarCaracteristica()), col, consultarAtractor(col["atractor"]))
-                time.sleep(30)
+                # time.sleep(30)
+                self.insertarTablaOferta(self.separarTamanio(col["tamanio"]), col, consultarAtractor(col["atractor"]))
                 self.connBDD.commit()
             except pyodbc.Error as e:
                 print("Se hara rollback debido a un error")
