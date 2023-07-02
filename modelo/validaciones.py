@@ -8,25 +8,23 @@ import re
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 from modelo.OperacionesBDD import BaseDatos
+from modelo.generarLogs import GenerarLogs
 from tenacity import retry, stop_after_attempt, wait_fixed
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
-#El detalle de los errores se encuentra en la variable de clase self.diccionarioErrores:
+#El detalle de los errores se encuentra en la clase GenerarLogs y se llama self.diccionarioErrores:
 
 class Validaciones:
 
     def __init__(self):
         self.ruta_access=r"./Vinculacion.accdb"  #cambiar segun el nombre del archivo, la ruta es relativa
         self.baseDatos = BaseDatos()
+        self.generarLogs=GenerarLogs()
         self.archivos_excel = []
-        self.diccionarioErrores={1:"Se han ingresado caracteres\n", 2:"Hay datos de numero de atractores, jornada o dias pero los datos del tamanio estan vacios\n",
-                        3:"La suma de los tamanios no coincide con el numero de atractores\n", 4:"Hay datos de numero de atractores, tamanio o dias pero los datos de la jornada estan vacios\n",
-                        5: "La suma de los datos de la jornada es menor al numero de atractores\n", 6:"Hay uno o varios datos de la jornada que sobrepasa el numero de atractores\n",
-                        7: "Hay datos de numero de atractores, tamanio o jornada pero los datos de los dias estan vacios\n", 8:"Uno o varios de los datos de los días de atención sobrepasan el numero de atractores\n",
-                        9: "La suma de los datos de los dias es menor al numero de atractores\n"} 
         self.listaCallesTramo=[] #contiene las calles principal y secundaria en un tramo(hoja) de una zona especifica(tramo)
         self.columnasSinErrores = []
         self.callesNoConectadas = [] #almacena las calles que han sobrepasado el tiempo de conexion con la API para igual validarlas al final del programa
         self.callesValidas=[]
+        self.contadorCorrecciones=0
     def leerCarpeta(self, carpeta):
         # Obtener todos los archivos en la carpeta que tengan la extensión .xlsx
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
@@ -131,9 +129,9 @@ class Validaciones:
         
         self.baseDatos.almacenarErrores(self.columnasConErrores)
         #if len(self.columnasConErrores)==0:
-        self.baseDatos.insercionBDD(self.columnasSinErrores)
+        #self.baseDatos.insercionBDD(self.columnasSinErrores)
         #self.reintentarConectarCalles()
-        self.generarArchivoLog()   #genera el archivo que contiene las calles no reconocidas 
+        self.generarLogs.generarArchivosLog(self.columnasConErrores, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas, self.listaZonaOGrupoNan)   #genera archivos logs que contienen la misma informacion de la interfaz
 
         return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas, self.listaZonaOGrupoNan
     
@@ -227,23 +225,7 @@ class Validaciones:
         #print("Calles encontradas que han hecho match con la API:"+str(self.callesValidas))
 
 
-    def generarArchivoLog(self):
-        #metodo que genera un archivo log detallando archivo y hoja de las calles no reconocidas
-        cont=0
 
-        cadenaEscribir = ""
-        for calle in self.hojasConCallesInvalidas:
-            cont+=1
-            cadenaEscribir = (
-                cadenaEscribir + str(cont)+"\n" + "Nombre del archivo: "+ str(calle["nombre_archivo"])+"\n" 
-                + "Nombre de la hoja: " + str(calle["nombre_hoja"])+"\n" + "Calle: "
-                + str(calle["calle"])+"\n" + "Tipo calle: "+str(calle["tipo"]) +"\n"
-                + "------------------------------------------------------------------------------------------------------------\n"
-                )  
-
-        with open("callesInvalidas.log", "w") as archivo:
-            archivo.write(cadenaEscribir)
-            archivo.close()
 
 
     def verObservacionesArchivos(self)->list:
@@ -375,7 +357,8 @@ class Validaciones:
             wb.save()
             wb.close()
             app.quit()
-
+            self.contadorCorrecciones+=1
+            self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha escrito el total(sumando los tamanios) de atractores en # Atractores porque era un campo vacío", columna, self.contadorCorrecciones)
             self.baseDatos.almacenarCorreccionesBDD("Se ha escrito el número de atractores en #Atractores", columna)
             columna["listaCorrecciones"][1] = True
 
@@ -452,6 +435,8 @@ class Validaciones:
                 wb.close()
                 app.quit()
 
+                self.contadorCorrecciones+=1
+                self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna, self.contadorCorrecciones)
                 self.baseDatos.almacenarCorreccionesBDD("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna)
                 columna["listaCorrecciones"][2] = True               
             
@@ -528,6 +513,8 @@ class Validaciones:
                 wb.close()
                 app.quit()
 
+                self.contadorCorrecciones+=1
+                self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna, self.contadorCorrecciones)
                 self.baseDatos.almacenarCorreccionesBDD("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
                 columna["listaCorrecciones"][3] = True
 
@@ -563,6 +550,9 @@ class Validaciones:
             wb.save()
             wb.close()
             app.quit()
+
+            self.contadorCorrecciones+=1
+            self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", columna, self.contadorCorrecciones)
             self.baseDatos.almacenarCorreccionesBDD("Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", 
                                                     columna)
             columna["listaCorrecciones"][4] = True
