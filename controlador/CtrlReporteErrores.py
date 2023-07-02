@@ -271,6 +271,6 @@ class Controlador(QWidget):
     def avisoPorVoz(self):
         voz = pyttsx3.init()
         voz.setProperty('rate', 150)
-        mensaje = "El programa ha terminado su ejecucion. Revise las pestañas de la interfaz para observar los resultados"
+        mensaje = "El programa ha terminado su ejecución. Revise las pestañas de la interfaz para observar los resultados"
         voz.say(mensaje)
         voz.runAndWait()

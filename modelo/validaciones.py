@@ -146,10 +146,9 @@ class Validaciones:
     
     def ingresoBDD(self, opcion):
         if len(self.columnasConErrores) == 0 and len(self.hojasConCallesInvalidas) == 0 and len(self.listaFormatoIncorrecto) == 0 and opcion == 1:
-            
+        
             self.baseDatos.insercionBDD(self.calles_tramos, self.columnasSinErrores)
-        else:
-            messagebox.showinfo("Datos con inconsistencias", "Para poder ingresar a la base de datos, deberán existir cero errores.")
+    
 
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
     def buscar_direccion(self, direccion, diccionarioCalles):
