@@ -113,7 +113,7 @@ class Ui_MainWindow(object):
         self.label_15.setPixmap(QtGui.QPixmap("./imagenes/moto.png"))
         self.label_15.setObjectName("label_15")
         self.tblFormatoIncorrecto_2 = QtWidgets.QTableView(self.frame_2)
-        self.tblFormatoIncorrecto_2.setGeometry(QtCore.QRect(325, 100, 700, 591))
+        self.tblFormatoIncorrecto_2.setGeometry(QtCore.QRect(230, 100, 771, 591))
         self.tblFormatoIncorrecto_2.setStyleSheet("background-color: rgb(255,255,255);\n"
 "border-radius:15;\n"
 "")
@@ -249,6 +249,44 @@ class Ui_MainWindow(object):
 "")
         self.tblCallesNoReconocidas.setObjectName("tblCallesNoReconocidas")
         self.tab_widget.addTab(self.tab_6, "")
+        self.tab_7 = QtWidgets.QWidget()
+        self.tab_7.setObjectName("tab_7")
+        self.frame_6 = QtWidgets.QFrame(self.tab_7)
+        self.frame_6.setGeometry(QtCore.QRect(0, 0, 1301, 801))
+        self.frame_6.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self.frame_6.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
+        self.frame_6.setObjectName("frame_6")
+        self.label_20 = QtWidgets.QLabel(self.frame_6)
+        self.label_20.setGeometry(QtCore.QRect(0, 0, 1301, 791))
+        self.label_20.setText("")
+        self.label_20.setPixmap(QtGui.QPixmap("./imagenes/Recurso 6-100.jpg"))
+        self.label_20.setObjectName("label_20")
+        self.label_21 = QtWidgets.QLabel(self.frame_6)
+        self.label_21.setGeometry(QtCore.QRect(-50, -30, 631, 381))
+        self.label_21.setText("")
+        self.label_21.setPixmap(QtGui.QPixmap("./imagenes/carro.png"))
+        self.label_21.setObjectName("label_21")
+        self.label_22 = QtWidgets.QLabel(self.frame_6)
+        self.label_22.setGeometry(QtCore.QRect(800, 480, 491, 291))
+        self.label_22.setText("")
+        self.label_22.setPixmap(QtGui.QPixmap("./imagenes/moto.png"))
+        self.label_22.setObjectName("label_22")
+        self.tblZonaOGrupoVacios = QtWidgets.QTableView(self.frame_6)
+        self.tblZonaOGrupoVacios.setGeometry(QtCore.QRect(60, 130, 1181, 591))
+        self.tblZonaOGrupoVacios.setStyleSheet("background-color: rgb(255,255,255);\n"
+"border-radius:15;\n"
+"")
+        self.tblZonaOGrupoVacios.setObjectName("tblZonaOGrupoVacios")
+        self.label_23 = QtWidgets.QLabel(self.frame_6)
+        self.label_23.setGeometry(QtCore.QRect(410, 40, 581, 51))
+        font = QtGui.QFont()
+        font.setPointSize(22)
+        font.setBold(True)
+        font.setWeight(75)
+        self.label_23.setFont(font)
+        self.label_23.setStyleSheet("color: rgb(255, 255, 255);")
+        self.label_23.setObjectName("label_23")
+        self.tab_widget.addTab(self.tab_7, "")
         self.tab_5 = QtWidgets.QWidget()
         self.tab_5.setObjectName("tab_5")
         self.frame_4 = QtWidgets.QFrame(self.tab_5)
@@ -300,12 +338,13 @@ class Ui_MainWindow(object):
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Para validar los datos de los Formularios Excel, usted tiene dos opciones: seleccionar un archivo específico o seleccionar la carpeta que contenga todos los formularios. </p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\';\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">La ejecución tardará entre 5 minutos y una hora aproximadamente, depende del número de correcciones necesarias en los archivos. Por favor no cerrar esta ventana mientras se está ejecutando. Usted puede controlar el avance de la ejecución en la consola.</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Si selecciona una carpeta la ejecución tardará 3 horas o más, depende del número de correcciones necesarias en los archivos. Es necesario conectarse a Internet.  Por favor no cerrar esta ventana mientras se está ejecutando. Usted puede controlar el avance de la ejecución en la consola.</p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Después de que hayan finalizado las correcciones y análisis de errores, en las siguientes pestañas, se encuentran tablas que muestran:</p>\n"
 "<ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Archivos con formato erróneo: Nombre de archivo y nombre de hoja que tienen un formato diferente. De las hojas Excel con formato erróneo, no se realizarán validaciones de ningún tipo.  </li>\n"
 "<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Reporte de errores: Tabla que contiene nombre de archivo, nombre de hoja, nombre de atractor, lista de errores que presenta, zona, grupo y tramo.  </li>\n"
 "<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Reporte de correcciones: Tabla que contiene los mismos encabezados de reporte de Errores. Pero que informa las correcciones que el programa ha realizado en los archivos. Para mayor información de las correcciones, se recomienda ver los manuales de usuario que han sido presentados.  </li>\n"
 "<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Calles no reconocidas: Se encuentra una tabla que detalla nombre de archivo y nombre de la hoja que contiene calles que no se han podido reconocer ni encontrar una similitud aparente.</li>\n"
+"<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Zona o grupo incorrectos: Se presenta una tabla que detalla nombre de archivo, nombre de hoja y tipo de error cuando la celda que almacena zona o grupo están vacías.</li>\n"
 "<li style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Ver observaciones: En esta opción usted podrá seleccionar una carpeta que contenga formularios, de los cuales se mostrarán las Observaciones recolectadas.</li></ul>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:1; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Los errores y las correcciones se guardan a su vez en una base de datos de Validaciones contenida en el archivo denominado Vinculacion.accdb.</p>\n"
@@ -326,6 +365,8 @@ class Ui_MainWindow(object):
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_3), _translate("MainWindow", "Reporte de correcciones"))
         self.label_19.setText(_translate("MainWindow", "CALLES NO RECONOCIDAS"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_6), _translate("MainWindow", "Calles no reconocidas"))
+        self.label_23.setText(_translate("MainWindow", "ZONA O GRUPO VACÍOS"))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_7), _translate("MainWindow", "Zona o grupo incorrectos"))
         self.btnVerObservaciones.setToolTip(_translate("MainWindow", "Al dar clic, podrá observar las observaciones que tienen los tramos de manera resumida en la tabla "))
         self.btnVerObservaciones.setText(_translate("MainWindow", "Ver observaciones"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_5), _translate("MainWindow", "Ver observaciones"))
