@@ -115,6 +115,8 @@ class BaseDatos:
                 self.cursorBDD.execute(query)
                 
             return True
+        except pyodbc.IntegrityError as e:
+            logging.error("Error al ejecutar la consulta: %s", e)
         except pyodbc.Error as e:
             print(datosInsercion)
             # time.sleep(10)
