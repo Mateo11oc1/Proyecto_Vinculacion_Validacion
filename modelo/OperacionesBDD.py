@@ -3,6 +3,7 @@ import pyodbc
 import logging
 import time
 import math
+from unidecode import unidecode
 class BaseDatos:
     def __init__(self):
         self.ruta_access = "./Vinculacion.accdb"
@@ -94,20 +95,25 @@ class BaseDatos:
             self.connBDD.rollback()
         self.cerrarConexion()
     
-    
-    def almacenarTramo(self, columna: dict):
+    def almacenarTramo(self, calles: dict):
         
         try:
             
             datosInsercion = (
-                columna["hoja"],
-                columna["zona"], 
-                1, 
-                columna["tramo"], 
+                calles["tramo"],
+                calles["zona"], 
+                calles["principal"][0], 
+                calles["nombreTramo"], 
             )
             print("Almacenar tramo:" + str(datosInsercion))
                         
-            self.cursorBDD.execute("INSERT INTO Tramo (numTramo, idZona, id_calle_principal, nombre) VALUES(?, ?, ?, ?)", datosInsercion)
+            self.cursorBDD.execute("INSERT INTO Tramo (numTramo, idZona, idCallePrincipal, nombre) VALUES(?, ?, ?, ?)", datosInsercion)
+            for calle in calles["secundarias"]:
+                print(calle)
+                query = f'INSERT INTO calle_secundaria_tramo (idTramo, idZona, idCalle) VALUES({calles["tramo"]}, {calles["zona"]}, {calle[0]})'
+                print(query)
+                self.cursorBDD.execute(query)
+                
             return True
         except pyodbc.Error as e:
             print(datosInsercion)
@@ -199,17 +205,36 @@ class BaseDatos:
         for tam, num in listaTamanios.items():
             try:
                 if num > 0:
-                    datosInsercion = (columna["zona"], columna["hoja"], idAtractor, tam, num)
+                    datosInsercion = (columna["zona"], columna["hoja"], idAtractor,1, tam, num)
                     print("Almacenar oferta: " + str(datosInsercion))
-                    self.cursorBDD.execute("INSERT INTO oferta (idZona, idTramo, idTipoAtractor, tamanio, cantidadAtractores) VALUES (?, ?, ?, ?, ?)", datosInsercion)
+                    self.cursorBDD.execute("INSERT INTO oferta (idZona, idTramo, idTipoAtractor, idMotivoAtraccion, tamanio, cantidadAtractores) VALUES (?, ?, ?, ?, ?, ?)", datosInsercion)
                     
             except pyodbc.Error as e:
                 print(datosInsercion)
                 # time.sleep(10)
                 logging.error("Error al ejecutar la consulta: %s", e)
                 
+    def buscarCalleBDD(self, calle: str):
+        self.crearConexionBDD(self.ruta_access)
+        print("Calle archivo: ", unidecode(str.upper(calle)))
+        # time.sleep(2)
+        self.cursorBDD.execute("SELECT * FROM calle WHERE nombre LIKE ?", unidecode(str.upper(calle)))
+        resultado = self.cursorBDD.fetchone()
+        print("\nResultado busqueda: " + str(resultado))
+        
+        return resultado
     
-    def insercionBDD(self, columnas_sin_errores: list):
+    def ingresarCalle(self, calle: str):
+        try:
+            self.crearConexionBDD(self.ruta_access)
+            self.cursorBDD.execute("INSERT INTO calle (nombre) VALUES (?)", calle)
+            self.connBDD.commit()
+        except pyodbc.Error as e:
+            print("Erro al ingrear la calle\n")
+            print(e)
+            self.connBDD.rollback()
+            
+    def insercionBDD(self, calles_tramos:dict, columnas_sin_errores: list):
         
         def consultarAtractor(atractor: str):
             print(atractor)
@@ -238,21 +263,37 @@ class BaseDatos:
             retorno.append(resultado[0])
 
             return retorno
-        
+        for i in columnas_sin_errores:
+            print(i)
+            print("\n")
         self.crearConexionBDD(self.ruta_access)
-        for col in columnas_sin_errores:
+        for calle in calles_tramos:
+            hoja = columnas_sin_errores[0]["hoja"]
             try:
-                print(str(col) + "\n") 
-                self.almacenarTramo(col)
-                # time.sleep(30)
-                self.almacenar_horario_jornada_tam(col)
-                # time.sleep(30)
-                self.almacenarCaracteristica(tuple(consultarCaracteristica()), col, consultarAtractor(col["atractor"]))
-                # time.sleep(30)
-                self.insertarTablaOferta(self.separarTamanio(col["tamanio"]), col, consultarAtractor(col["atractor"]))
-                self.connBDD.commit()
+                self.almacenarTramo(calle)
+                borrar = []
+                for col in columnas_sin_errores:
+                    if col["hoja"] == hoja:
+                        print(str(col) + "\n") 
+                        
+                        # time.sleep(10)
+                        self.almacenar_horario_jornada_tam(col)
+                        # time.sleep(10)
+                        self.almacenarCaracteristica(tuple(consultarCaracteristica()), col, consultarAtractor(col["atractor"]))
+                        # time.sleep(10)
+                        self.insertarTablaOferta(self.separarTamanio(col["tamanio"]), col, consultarAtractor(col["atractor"]))
+                        self.connBDD.commit()
+                        borrar.append(col)
+                        
+                    else:
+                        hoja = col["hoja"]
+                        columnas_sin_errores = [i for i in columnas_sin_errores if i not in borrar]
+                        break
+            
             except pyodbc.Error as e:
-                print("Se hara rollback debido a un error")
+                print("Se hara rollback debido a un error en ingresar tramo")
                 print(e)
                 self.connBDD.rollback()
+            
+        self.cerrarConexion()
         
