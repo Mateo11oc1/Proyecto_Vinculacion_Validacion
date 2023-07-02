@@ -94,7 +94,14 @@ class BaseDatos:
             self.connBDD.rollback()
         self.cerrarConexion()
     
-    
+    #este metodo se utiliza cuando hay varios archivos de la misma zona 
+    #def configurarTramo(self, zona):
+    #   self.cursorBDD.execute("SELECT max(numTramo) as ultimo_idTramo FROM Tramo WHERE idZona="+str(zona))
+    #    result=self.cursorBDD.fetchone()
+    #    print(result)
+    #    return result
+
+
     def almacenarTramo(self, columna: dict):
         
         try:
@@ -109,6 +116,8 @@ class BaseDatos:
                         
             self.cursorBDD.execute("INSERT INTO Tramo (numTramo, idZona, id_calle_principal, nombre) VALUES(?, ?, ?, ?)", datosInsercion)
             return True
+        except pyodbc.IntegrityError as e:
+            logging.error("Error al ejecutar la consulta: %s", e)
         except pyodbc.Error as e:
             print(datosInsercion)
             # time.sleep(10)
@@ -249,7 +258,7 @@ class BaseDatos:
                 # time.sleep(30)
                 self.almacenarCaracteristica(tuple(consultarCaracteristica()), col, consultarAtractor(col["atractor"]))
                 # time.sleep(30)
-                self.insertarTablaOferta(self.separarTamanio(col["tamanio"]), col, consultarAtractor(col["atractor"]))
+                #self.insertarTablaOferta(self.separarTamanio(col["tamanio"]), col, consultarAtractor(col["atractor"]))
                 self.connBDD.commit()
             except pyodbc.Error as e:
                 print("Se hara rollback debido a un error")

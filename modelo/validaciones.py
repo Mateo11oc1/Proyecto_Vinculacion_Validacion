@@ -65,6 +65,7 @@ class Validaciones:
             return {"calle principal":str(hoja.iloc[2,12]), "calles secundarias": calles, "tramo": hoja.iloc[1,12], "nombre_hoja": nombre_hoja, "nombre_archivo": nombre_archivo}
     
 
+    
     #opcion es para ver si se ha seleccionado un solo archivo(1) o una carpeta(2), este metodo es llamado desde el controlador
     def procesar_archivos_excel(self, opcion):
         self.listaFormatoIncorrecto=[]
@@ -72,6 +73,7 @@ class Validaciones:
         self.columnasConErrores = []
         self.columnasConCorrecciones=[]
         self.hojasConCallesInvalidas=[]
+        self.listaZonaOGrupoNan=[]
         #Recorro todos los archivos, i-> nombreArchivo
         print(self.archivos_excel)
         for i in self.archivos_excel:
@@ -84,6 +86,7 @@ class Validaciones:
                 for nombreHoja, hoja in leido.items():
                     
                     if not self.validarFormatoIncorrecto(nombreHoja, i, hoja): #si el formato de la hoja no es incorrecto
+                        self.validarZonaOGrupoNan(hoja, i, nombreHoja)
                         #Recorro cada columna
                         for columna in range(2, 55):
                             #Desde la fila 7 en adelante porque alli empiezan los datos que interesan almacenar(nombre de atractor, numero,dias,jornada, tamanio)
@@ -114,7 +117,8 @@ class Validaciones:
                                         self.columnasConCorrecciones.append(columna)
                                         break
                     
-                        self.compararCalles(self.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))    
+
+                        #self.compararCalles(self.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))    
                     
                     else:
                         malformato={"nombre_archivo":os.path.basename(i),"nombre_hoja": nombreHoja }
@@ -124,13 +128,14 @@ class Validaciones:
                 print(f"Ocurrio una excepcion:", str(e))
                 #time.sleep(5)
         
-        self.generarArchivoLog()   #genera el archivo que contiene las calles no reconocidas 
-        self.baseDatos.almacenarErrores(self.columnasConErrores)
-        self.baseDatos.insercionBDD(self.columnasSinErrores)
-        self.reintentarConectarCalles()
         
+        self.baseDatos.almacenarErrores(self.columnasConErrores)
+        #if len(self.columnasConErrores)==0:
+        self.baseDatos.insercionBDD(self.columnasSinErrores)
+        #self.reintentarConectarCalles()
+        self.generarArchivoLog()   #genera el archivo que contiene las calles no reconocidas 
 
-        return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas
+        return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas, self.listaZonaOGrupoNan
     
 
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
@@ -562,6 +567,23 @@ class Validaciones:
                                                     columna)
             columna["listaCorrecciones"][4] = True
 
+    #la celda que contiene la informacion de zona y/o grupo estan vacios
+    def validarZonaOGrupoNan(self, hoja_leida,archivo , nombreHoja):
+        error=""
+        try:
+            if hoja_leida.iloc[1,2] is None:
+                error+="El dato del grupo está vacío"
+            if isinstance(hoja_leida.iloc[1,2], str):
+                error+="El dato del grupo esta incorrecto.\n"
+            if hoja_leida.iloc[2,2] is None:
+                error+="El dato de la zona está vacío.\n "
+            if isinstance(hoja_leida.iloc[2,2], str):
+                error+="El dato de la zona no contiene un numero sino un nombre.\n"
+            if error!="":
+                self.listaZonaOGrupoNan.append({"nombre_archivo": os.path.basename(archivo), "nombre_hoja": nombreHoja, "errores": error, "zona": hoja_leida.iloc[2,2], "grupo": hoja_leida.iloc[1,2] })
+        except TypeError as e:
+            print(str(e))
+        
 
     #en esta funcion se llaman a todas las validacione,s optimizando su uso
     def validar(self, columna: dict):
@@ -572,7 +594,9 @@ class Validaciones:
         if vacia[1]:
             return None
         else:
+            
             caracteres = self.validarCaracteres(vacia[0])
+            
             #si una columna contiene caracteres ya no se valida nada mas y se marcan todo el resto de errores como falsos
             if caracteres[1]:
                 caracteres[0]["listaErrores"][2] = False
