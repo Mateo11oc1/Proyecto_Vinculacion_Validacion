@@ -8,12 +8,9 @@ import xlwings
 import re
 import tkinter as tk
 from tkinter import messagebox
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 from modelo.OperacionesBDD import BaseDatos
 from modelo.generarLogs import GenerarLogs
-from tenacity import retry, stop_after_attempt, wait_fixed
-from unidecode import unidecode
+from modelo.manejoCalles import ManejoCalles
 #Las validaciones devuelve un valor de true si es que la columna presenta el error especificado, caso contrario, devuelve false
 #El detalle de los errores se encuentra en la clase GenerarLogs y se llama self.diccionarioErrores:
 
@@ -23,14 +20,11 @@ class Validaciones:
         self.ruta_access=r"./Vinculacion.accdb"  #cambiar segun el nombre del archivo, la ruta es relativa
         self.baseDatos = BaseDatos()
         self.generarLogs=GenerarLogs()
+        self.manejoCalles=ManejoCalles()
         self.archivos_excel = []
-        self.listaCallesTramo=[] #contiene las calles principal y secundaria en un tramo(hoja) de una zona especifica(tramo)
         self.columnasSinErrores = []
-        self.callesNoConectadas = [] #almacena las calles que han sobrepasado el tiempo de conexion con la API para igual validarlas al final del programa
-        self.callesValidas=[]
-        self.calles_tramos = []
-        
         self.contadorCorrecciones=0
+
     def leerCarpeta(self, carpeta):
         # Obtener todos los archivos en la carpeta que tengan la extensión .xlsx
         self.archivos_excel = [archivo for archivo in  glob.glob(os.path.join(carpeta, '*.xlsx')) if not os.path.basename(archivo).startswith("~$")]
@@ -45,29 +39,10 @@ class Validaciones:
             else:
                 print("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
                 return True
-        except:
+        except Exception as e:
+            print(str(e))
             return True  
 
-    def almacenarCalles_Tramo(self, hoja, nombre_archivo, nombre_hoja):
-        calles_secundarias=str(hoja.iloc[3,14])
-        # Eliminar la cadena "S/N" de calles_secundarias porque / es un separador de calles y podria confundir a N como una calle y a S como otra
-        calles_secundarias = calles_secundarias.replace("S/N", "")
-        #para separar las calles se consideran los siguientes separadores
-        # si hay una  " y ", " Y " , " entre ", " Entre ", "e", "E", "ENTRE" que separe las calles
-        # separaciones por guiones -, por amperson &, por slash /
-        #separar por numeros con punto 1. 2. o numero seguido de ) 1) 2)
-        separadores=[r'\by\b',r'\be\b',r'\bE\b', r'\bENTRE\b', r'\s*,\s*', r'\s*-\s*', r'\s*&\s*',  r'\d\.', r'\s*/\s*', r'\bentre\b', r'\bY\b', r'\d+\)', r'\bEntre\b']
-        patron='|'.join(separadores) #une los separadores para dividir las calles si se cumple cualquier a de los patrones especificados 
-        #patron contiene \by\b|\s*,\s*|\s*-\s*|\s*&\s*|\d\.|\s*\/\s*
-        calles = [] 
-        #si es que no esta vacia la celda de calles secundarias 
-        if calles_secundarias!=None:
-            calles=re.split(patron, str(calles_secundarias))
-            # Eliminar espacios en blanco al inicio y al final de cada calle
-            calles = [calle.strip() for calle in calles if calle and calle.strip()]  
-            
-            return {"calle principal":str(hoja.iloc[2,12]), "calles secundarias": calles, "tramo": hoja.iloc[1,12], "nombre_hoja": nombre_hoja, "nombre_archivo": nombre_archivo}
-    
     
     #opcion es para ver si se ha seleccionado un solo archivo(1) o una carpeta(2), este metodo es llamado desde el controlador
     def procesar_archivos_excel(self, opcion):
@@ -75,7 +50,6 @@ class Validaciones:
         self.listaColumnas = []
         self.columnasConErrores = []
         self.columnasConCorrecciones=[]
-        self.hojasConCallesInvalidas=[]
         self.listaZonaOGrupoNan=[]
         #Recorro todos los archivos, i-> nombreArchivo
         print(self.archivos_excel)
@@ -120,10 +94,11 @@ class Validaciones:
                                     if correccion:
                                         self.columnasConCorrecciones.append(columna)
                                         break
-
-                        calles = self.compararCalles(self.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))  
-                        self.calles_tramos.append({**{"zona":columnaInsercion["zona"], "tramo":columnaInsercion["hoja"], "nombreTramo":columnaInsercion["tramo"]}, **calles})
-
+                        try:
+                            calles = self.manejoCalles.compararCalles(self.manejoCalles.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))      
+                        except Exception as e:
+                            print(str(e))
+                        self.manejoCalles.calles_tramos.append({**{"zona":columnaInsercion["zona"], "tramo":columnaInsercion["hoja"], "nombreTramo":columnaInsercion["tramo"]}, **calles})
                     else:
                         malformato={"nombre_archivo":os.path.basename(i),"nombre_hoja": nombreHoja }
                         self.listaFormatoIncorrecto.append(malformato)
@@ -134,128 +109,20 @@ class Validaciones:
                 #time.sleep(5)
         
         
-        self.baseDatos.almacenarErrores(self.columnasConErrores)
-        #if len(self.columnasConErrores)==0:
         self.ingresoBDD(opcion)
-        #self.reintentarConectarCalles()
-        self.generarLogs.generarArchivosLog(self.columnasConErrores, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas, self.listaZonaOGrupoNan)   #genera archivos logs que contienen la misma informacion de la interfaz
+        self.manejoCalles.reintentarConectarCalles()
+        self.baseDatos.almacenarTodosLosErrores(self.columnasConErrores, self.listaFormatoIncorrecto, self.listaZonaOGrupoNan, self.manejoCalles.hojasConCallesInvalidas)
+        self.generarLogs.generarArchivosLog(self.columnasConErrores, self.listaFormatoIncorrecto, self.manejoCalles.hojasConCallesInvalidas, self.listaZonaOGrupoNan)   #genera archivos logs que contienen la misma informacion de la interfaz
 
-        return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.hojasConCallesInvalidas, self.listaZonaOGrupoNan
-    
+        return self.columnasConErrores, self.columnasConCorrecciones, self.listaFormatoIncorrecto, self.manejoCalles.hojasConCallesInvalidas, self.listaZonaOGrupoNan
+
+
+    #metodo con el cual se llama a ingresar toda la informacion de zona, tramo, calles, atractores, tamanio, jornada
     def ingresoBDD(self, opcion):
-        if len(self.columnasConErrores) == 0 and len(self.hojasConCallesInvalidas) == 0 and len(self.listaFormatoIncorrecto) == 0 and opcion == 1:
+        if len(self.columnasConErrores) == 0 and len(self.manejoCalles.hojasConCallesInvalidas) == 0 and len(self.listaFormatoIncorrecto) == 0 and opcion == 1:
         
-            self.baseDatos.insercionBDD(self.calles_tramos, self.columnasSinErrores)
+            self.baseDatos.insercionBDD(self.manejoCalles.calles_tramos, self.columnasSinErrores)
     
-
-    @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
-    def buscar_direccion(self, direccion, diccionarioCalles):
-        
-        try:
-            geolocator = Nominatim(user_agent="proyecto_vinculacion")  # Especifica un nombre de agente personalizado
-            location = geolocator.geocode(direccion + ', Cuenca, Ecuador')
-            return location
-        except GeocoderTimedOut as e:
-            print("Problema de GeocoderTimedOut: ")
-            print(e)
-            no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion}
-            self.callesNoConectadas.append(no_conectada)
-            return "problema_conexion"
-        except GeocoderUnavailable as e:
-            print("Problema de GeocoderUnavailable: ")
-            print(e)
-            no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion}
-            self.callesNoConectadas.append(no_conectada)
-            return "problema_conexion"
-
-    def compararCalles(self, callesTramo: dict):
-        
-        def buscarCallesSecundarias(listaSecundarias: list, diccionarioCalles):
-            
-            sec_validas = []
-            for secundaria in listaSecundarias:
-                location = self.buscar_direccion(secundaria, diccionarioCalles)
-                if location is not None and location!="problema_conexion":
-                    print("Calle secundaria: ", secundaria)
-                    print('Calle de API:', location.address)
-                    print('Latitud:', location.latitude)
-                    print('Longitud:', location.longitude)
-                    calle_bien={"nombre_archivo": callesTramo["nombre_archivo"], "nombre_hoja": callesTramo["nombre_hoja"], "calle": secundaria, "tipo": "secundaria"}
-                    calleEncontrada = self.baseDatos.buscarCalleBDD(location.address.split(",")[0].strip())
-                    if calleEncontrada:
-                        sec_validas.append(calleEncontrada)
-                    else:
-                        self.baseDatos.ingresarCalle(unidecode(str.upper(location.address.split(",")[0].strip())))
-                        sec_validas.append(self.baseDatos.buscarCalleBDD(location.address.split(",")[0].strip()))
-                    self.callesValidas.append(calle_bien)
-                
-                elif location == "problema_conexion":
-                    print("Calle secundaria sin conectarse: ", secundaria)
-                    sec_validas.append(["",""])
-                else:
-                    print('No se encontró la calle '+secundaria)
-                    calle_mal={"nombre_archivo": callesTramo["nombre_archivo"], "nombre_hoja": callesTramo["nombre_hoja"], "calle": secundaria, "tipo": "secundaria"}
-                    self.hojasConCallesInvalidas.append(calle_mal)
-                    sec_validas.append(["",""])
-            
-            return sec_validas
-        #------------------------------------------------------------------------------------------------------------------------------------------
-
-        location = self.buscar_direccion(callesTramo["calle principal"], callesTramo)
-    
-        if location is not None and location!="problema_conexion":
-            print("Calle principal: ", callesTramo["calle principal"])
-            print('Calle de API:', location.address)
-            print('Latitud:', location.latitude)
-            print('Longitud:', location.longitude)
-            prin_valida = self.baseDatos.buscarCalleBDD(location.address.split(",")[0].strip())
-            if prin_valida:
-                self.baseDatos.ingresarCalle(unidecode(str.upper(location.address.split(",")[0].strip())))
-                prin_valida = self.baseDatos.buscarCalleBDD(location.address.split(",")[0].strip())
-                
-            calle_bien={"nombre_archivo": callesTramo["nombre_archivo"], "nombre_hoja": callesTramo["nombre_hoja"], "calle":callesTramo["calle principal"], "tipo": "secundaria"}
-            self.callesValidas.append(calle_bien)
-        elif location == "problema_conexion":
-            print("Calle principal sin conectarse: ", callesTramo["calle principal"])
-            prin_valida = ["",""]
-        else:
-            print('No se encontró la calle '+callesTramo["calle principal"])
-            calle_mal={"nombre_archivo": callesTramo["nombre_archivo"], "nombre_hoja": callesTramo["nombre_hoja"], "calle": callesTramo["calle principal"], "tipo": "principal"}
-            self.hojasConCallesInvalidas.append(calle_mal)
-            prin_valida = ["",""]
-        
-        return {"principal": prin_valida, "secundarias":buscarCallesSecundarias(callesTramo["calles secundarias"], callesTramo)}
-        
-    def reintentarConectarCalles(self):
-        print("Calles no conectadas"+str(self.callesNoConectadas))
-        #hacer una copia de la lista para luego vaciarla 
-        self.copia=self.callesNoConectadas.copy()
-        self.callesNoConectadas=[] #no vaciarle antes ojo
-        #volver a intentar conectar las calles
-        #no hacer un for each sino un for normal porque necesito todos los datos
-        for no_conectada in self.copia:
-            location=self.buscar_direccion(no_conectada["calle"], no_conectada)
-            if location is not None and location!="problema_conexion":
-                print("Calle: ", no_conectada["calle"])
-                print('Calle de API:', location.address)
-                print('Latitud:', location.latitude)
-                print('Longitud:', location.longitude)
-                calle_bien={"nombre_archivo": no_conectada["nombre_archivo"], "nombre_hoja": no_conectada["nombre_hoja"], "calle": no_conectada["calle"], "tipo": "secundaria"}
-                self.callesValidas.append(calle_bien)
-            elif location == "problema_conexion":
-                pass
-            else:
-                print("La calle "+no_conectada["calle"]+" no existe")
-                calle_mal={"nombre_archivo": no_conectada["nombre_archivo"], "nombre_hoja": no_conectada["nombre_hoja"], "calle": no_conectada["calle"], "tipo": "secundaria"}
-                self.hojasConCallesInvalidas.append(calle_mal)
-        
-        print("Calles no conectadas parte 2 "+str(self.callesNoConectadas))
-        #print("Calles encontradas pero invalidas:"+str(self.hojasConCallesInvalidas))
-        #print("Calles encontradas que han hecho match con la API:"+str(self.callesValidas))
-
-
-
-
 
     def verObservacionesArchivos(self)->list:
         self.listaColumnas = []
@@ -272,16 +139,18 @@ class Validaciones:
             for nombreHoja, j in leido.items():
                 #Recorro cada columna
                 #shape[1] nos da el numero de columnas de la hoja
-                try:
-                    archivo={"hoja":numHoja, "nombre_archivo":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
-                        "observaciones":j.iloc[30,1], "nombre_hoja":nombreHoja}
-                    #Si las observaciones no estan vacias
-                    if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
-                        self.archivoConObservaciones.append(archivo)
+                if not self.validarFormatoIncorrecto(nombreHoja, i,j):
+                    try:
+                        archivo={"hoja":numHoja, "nombre_archivo":os.path.basename(i), "grupo": j.iloc[1, 2], "zona":j.iloc[2, 2], "tramo": j.iloc[1, 12],
+                            "observaciones":j.iloc[30,1], "nombre_hoja":nombreHoja}
+                        print(f'---------\nArchivo: {archivo["nombre_archivo"]}\n Hoja: {archivo["nombre_hoja"]}')
+                        #Si las observaciones no estan vacias
+                        if archivo["observaciones"] is not None and not pandas.isna(archivo["observaciones"]):
+                            self.archivoConObservaciones.append(archivo)
 
-                    numHoja += 1
-                except Exception as e:
-                    print(f"Error en el archivo {i}. \nHoja: {nombreHoja} {e}")
+                        numHoja += 1
+                    except Exception as e:
+                        print(f"Error en el archivo {i}. \nHoja: {nombreHoja} {e}")
     
         return self.archivoConObservaciones
 

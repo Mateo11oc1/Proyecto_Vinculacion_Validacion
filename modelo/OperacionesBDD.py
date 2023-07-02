@@ -18,82 +18,6 @@ class BaseDatos:
         self.cursorBDD.close()
         self.connBDD.close()
 
-    def almacenarErrores(self, columnasConErrores):
-        self.crearConexionBDD(self.ruta_access)
-        self.cursorBDD.execute("DELETE FROM detallescolumna")
-        self.cursorBDD.execute("DELETE FROM error_detalle")
-        
-        for columna in columnasConErrores:
-            iterador=0
-            try:
-                datosInsercion = (
-                    columna["nombre_archivo"], 
-                    columna["nombre_hoja"], 
-                    columna["atractor"], 
-                    columna["zona"], 
-                    columna["grupo"]
-                )
-                print(datosInsercion)
-                self.cursorBDD.execute("INSERT INTO detallescolumna (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
-                
-                for valor in columna["listaErrores"].values():
-                    iterador+=1
-                    if valor:
-                            datosInsercion = (
-                                iterador, 
-                                columna["nombre_archivo"], 
-                                columna["nombre_hoja"], 
-                                columna["atractor"], 
-                            )
-                            print(datosInsercion)
-                            self.cursorBDD.execute("INSERT INTO error_detalle (idError, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
-                            
-                            self.connBDD.commit()
-                        
-            except pyodbc.Error as e:
-                logging.error("Error: %s", e)
-                self.connBDD.rollback()
-                                
-        self.cerrarConexion()
-                        
-            
-    def almacenarCorreccionesBDD(self, nombreCorreccion:str, columna):
-
-        self.crearConexionBDD(self.ruta_access)
-    
-        try:
-            self.cursorBDD.execute("SELECT id FROM correcciones WHERE descripcion = ?", nombreCorreccion)
-            res = list(self.cursorBDD.fetchall())
-            idCorrecion = res[0][0]
-            print("Id correccion: " + str(idCorrecion))
-        
-            datosInsercion = (
-                columna["nombre_archivo"], 
-                columna["nombre_hoja"], 
-                columna["atractor"], 
-                columna["zona"], 
-                columna["grupo"]
-            )
-            print(datosInsercion)
-                        
-            self.cursorBDD.execute("INSERT INTO DetalleCol_Correcciones (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
-                        
-            datosInsercion = (
-                idCorrecion,
-                columna["nombre_archivo"], 
-                columna["nombre_hoja"], 
-                columna["atractor"], 
-            )
-                        
-            self.cursorBDD.execute("INSERT INTO correccion_detalle (idCorreccion, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
-                        
-            self.connBDD.commit()
-        except pyodbc.Error as e:
-            print(datosInsercion)
-            # time.sleep(10)
-            logging.error("Error al ejecutar la consulta: %s", e)
-            self.connBDD.rollback()
-        self.cerrarConexion()
     
     def almacenarTramo(self, calles: dict):
         
@@ -298,4 +222,160 @@ class BaseDatos:
                 self.connBDD.rollback()
             
         self.cerrarConexion()
+
+##############################################################################################################################
+#Ingreso de errores y correcciones en la BDD
+    def almacenarTodosLosErrores(self, columnasConErrores, hojasMalFormato, hojasZonaGrupoMal, callesNoReconocidas): #este metodo llama a todas las funciones de abajo exceptuando almacenarCorrecciones
+        self.almacenarErrores(columnasConErrores)
+        self.almacenarFormatoIncorrecto(hojasMalFormato)
+        self.almacenarZonaOGrupoIncorrectos(hojasZonaGrupoMal)
+        self.almacenarCallesNoReconocidas(callesNoReconocidas)
+
+
+    def almacenarErrores(self, columnasConErrores):
+        self.crearConexionBDD(self.ruta_access)
+        self.cursorBDD.execute("DELETE FROM detallescolumna")
+        self.cursorBDD.execute("DELETE FROM error_detalle")
         
+        for columna in columnasConErrores:
+            iterador=0
+            try:
+                datosInsercion = (
+                    columna["nombre_archivo"], 
+                    columna["nombre_hoja"], 
+                    columna["atractor"], 
+                    columna["zona"], 
+                    columna["grupo"]
+                )
+                print(datosInsercion)
+                self.cursorBDD.execute("INSERT INTO detallescolumna (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
+                
+                for valor in columna["listaErrores"].values():
+                    iterador+=1
+                    if valor:
+                            datosInsercion = (
+                                iterador, 
+                                columna["nombre_archivo"], 
+                                columna["nombre_hoja"], 
+                                columna["atractor"], 
+                            )
+                            print(datosInsercion)
+                            self.cursorBDD.execute("INSERT INTO error_detalle (idError, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
+                            
+                            self.connBDD.commit()
+                        
+            except pyodbc.Error as e:
+                logging.error("Error: %s", e)
+                self.connBDD.rollback()
+                                
+        self.cerrarConexion()
+                        
+            
+    def almacenarCorreccionesBDD(self, nombreCorreccion:str, columna):
+
+        self.crearConexionBDD(self.ruta_access)
+    
+        try:
+            self.cursorBDD.execute("SELECT id FROM correcciones WHERE descripcion = ?", nombreCorreccion)
+            res = list(self.cursorBDD.fetchall())
+            idCorrecion = res[0][0]
+            print("Id correccion: " + str(idCorrecion))
+        
+            datosInsercion = (
+                columna["nombre_archivo"], 
+                columna["nombre_hoja"], 
+                columna["atractor"], 
+                columna["zona"], 
+                columna["grupo"]
+            )
+            print(datosInsercion)
+                        
+            self.cursorBDD.execute("INSERT INTO DetalleCol_Correcciones (nombreArchivo, nombreHoja, atractor, zona, grupo) VALUES(?, ?, ?, ?, ?)", datosInsercion)
+                        
+            datosInsercion = (
+                idCorrecion,
+                columna["nombre_archivo"], 
+                columna["nombre_hoja"], 
+                columna["atractor"], 
+            )
+                        
+            self.cursorBDD.execute("INSERT INTO correccion_detalle (idCorreccion, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
+                        
+            self.connBDD.commit()
+        except pyodbc.Error as e:
+            print(datosInsercion)
+            # time.sleep(10)
+            logging.error("Error al ejecutar la consulta: %s", e)
+            self.connBDD.rollback()
+        self.cerrarConexion()
+
+    def almacenarFormatoIncorrecto(self, hojasConFormatoIncorrecto):
+        self.crearConexionBDD(self.ruta_access)
+        self.cursorBDD.execute("DELETE FROM FormatoIncorrecto")
+        iterador=1
+        for hoja in hojasConFormatoIncorrecto:
+            
+            try:
+                datosInsercion = (
+                    iterador,
+                    hoja["nombre_archivo"], 
+                    hoja["nombre_hoja"]
+                )
+                print(datosInsercion)
+                self.cursorBDD.execute("INSERT INTO FormatoIncorrecto (id, nombreArchivo, nombreHoja) VALUES(?, ?, ?)", datosInsercion)
+                self.connBDD.commit()
+                iterador+=1        
+            except pyodbc.Error as e:
+                logging.error("Error: %s", e)
+                self.connBDD.rollback()
+                                
+        self.cerrarConexion()
+
+    def almacenarZonaOGrupoIncorrectos(self, hojasConZonaOGrupoIncorrecto):
+        self.crearConexionBDD(self.ruta_access)
+        self.cursorBDD.execute("DELETE FROM ZonaOGrupoIncorrectos")
+        iterador=1
+        for hoja in hojasConZonaOGrupoIncorrecto:
+            
+            try:
+                datosInsercion = (
+                    iterador,
+                    hoja["nombre_archivo"], 
+                    hoja["nombre_hoja"], 
+                    hoja["zona"],
+                    hoja["grupo"], 
+                    hoja["errores"]
+                )
+                print(datosInsercion)
+                self.cursorBDD.execute("INSERT INTO ZonaOGrupoIncorrectos (id, nombreArchivo, nombreHoja, zona, grupo, errores) VALUES(?, ?, ?, ?, ?, ?)", datosInsercion)
+                self.connBDD.commit()
+                iterador+=1
+            except pyodbc.Error as e:
+                logging.error("Error: %s", e)
+                self.connBDD.rollback()
+                                
+        self.cerrarConexion()
+    
+    def almacenarCallesNoReconocidas(self, listaCalles):
+        self.crearConexionBDD(self.ruta_access)
+        self.cursorBDD.execute("DELETE FROM callesNoReconocidas")
+        iterador=1
+        for calle in listaCalles:
+            
+            try:
+                datosInsercion = (
+                    iterador,
+                    calle["nombre_archivo"], 
+                    calle["nombre_hoja"], 
+                    calle["calle"],
+                    calle["tipo"]                
+                )
+                print(datosInsercion)
+                self.cursorBDD.execute("INSERT INTO callesNoReconocidas (id, nombreArchivo, nombreHoja, calle, tipoCalle) VALUES(?, ?, ?, ?, ?)", datosInsercion)
+                self.connBDD.commit()
+                iterador+=1
+            except pyodbc.Error as e:
+                logging.error("Error: %s", e)
+                self.connBDD.rollback()
+                                
+        self.cerrarConexion()

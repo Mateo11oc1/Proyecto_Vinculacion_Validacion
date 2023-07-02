@@ -45,6 +45,7 @@ class Controlador(QWidget):
         self.vista.ui.tblTablaErrores.setModel(None)
         carpeta = QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
         if carpeta and os.path.isdir(carpeta):
+            self.modelo = Validaciones()
             self.modelo.leerCarpeta(carpeta)
             mensaje=QMessageBox()
             mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
@@ -233,7 +234,7 @@ class Controlador(QWidget):
         carpetaObservaciones= QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", "/")
 
         if carpetaObservaciones and os.path.isdir(carpetaObservaciones):
-            
+            self.modelo = Validaciones()
             self.modelo.leerCarpeta(carpetaObservaciones)
             #mensaje=QMessageBox()
             #mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
@@ -257,7 +258,7 @@ class Controlador(QWidget):
         self.vista.ui.tblTablaErrores.setModel(None)
         archivo, ok = QFileDialog.getOpenFileName(self, "Seleccionar archivo", r"<Default dir>", "Archivos excel (*.xlsx)")
         if ok:
-            
+            self.modelo = Validaciones()
             self.setCabecerasTablaErrores()
             self.modelo.archivos_excel = [archivo]
             columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas, zona_grupo_vacias = self.modelo.procesar_archivos_excel(2)
