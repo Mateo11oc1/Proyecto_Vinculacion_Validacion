@@ -33,15 +33,17 @@ class Validaciones:
     #un error de formato es si la tabla esta movida hacia arriba, abajo, derecha o izquierda
     def validarFormatoIncorrecto(self, nombre_hoja, nombre_archivo, hoja_leida):
         
+        
         try:
-            if hoja_leida.iloc[1,1]=="Grupo:" and hoja_leida.iloc[2,1]=="Zona:" and hoja_leida.iloc[6,2]=="Educación" and hoja_leida.iloc[9,1]=="# Atractores" and hoja_leida.iloc[7, 2]=="Escuela/Colegio":
+
+            if hoja_leida.iloc[1,1]=="Grupo:" and hoja_leida.iloc[2,1]=="Zona:" and hoja_leida.iloc[6,2]=="Educación" and hoja_leida.iloc[9,1]=="# Atractores" and hoja_leida.iloc[7, 2]=="Escuela/Colegio" and hoja_leida.iloc[7,54]=="Edificio de Departamentos":               
                 pass
             else:
                 print("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
                 return True
-        except Exception as e:
+        except IndexError as e:
             print(str(e))
-            return True  
+            return True  #si se produce una excepcion es porque no se pudo acceder a una de las celdas, se retorna True porque significa que la celda esta vacia y tiene mal formato
 
     
     #opcion es para ver si se ha seleccionado un solo archivo(1) o una carpeta(2), este metodo es llamado desde el controlador

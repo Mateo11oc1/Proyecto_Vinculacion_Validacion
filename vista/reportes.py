@@ -80,6 +80,7 @@ class Ui_MainWindow(object):
 "border-radius:15;\n"
 "")
         self.textAreaIndicaciones.setObjectName("textAreaIndicaciones")
+        self.textAreaIndicaciones.setEnabled(False)
         self.tab_widget.addTab(self.tab, "")
         self.tab_4 = QtWidgets.QWidget()
         self.tab_4.setObjectName("tab_4")
