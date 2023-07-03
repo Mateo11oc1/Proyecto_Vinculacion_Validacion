@@ -26,7 +26,7 @@ class GenerarLogs:
                 + "------------------------------------------------------------------------------------------------------------\n"
                 )  
 
-        with open("callesInvalidas.log", "w") as archivo:
+        with open("log/callesInvalidas.log", "w") as archivo:
             archivo.write(cadenaEscribir)
             archivo.close()
     
@@ -43,7 +43,7 @@ class GenerarLogs:
                 if valor:
                     errores+=self.diccionarioErrores[iterador]
             #try:
-            with open("errores.log", "w") as archivo:
+            with open("log/errores.log", "w") as archivo:
                 cont+=1
 
                 archivo.write(str(cont)+"\n")
@@ -59,7 +59,7 @@ class GenerarLogs:
 
     def generarArchivoCorreccionesRealizadas(self, nombreCorreccion:str, columna, contador):
 
-        with open("correcciones.log", "a") as archivo:
+        with open("log/correcciones.log", "a") as archivo:
 
             archivo.write(str(contador)+"\n")
             archivo.write("Nombre del archivo: "+ str(columna["nombre_archivo"])+"\n")
@@ -82,7 +82,7 @@ class GenerarLogs:
                 + "------------------------------------------------------------------------------------------------------------\n"
                 )  
 
-        with open("formatoIncorrecto.log", "w") as archivo:
+        with open("log/formatoIncorrecto.log", "w") as archivo:
             archivo.write(cadenaEscribir)
             archivo.close()
 
@@ -102,6 +102,6 @@ class GenerarLogs:
                 + "------------------------------------------------------------------------------------------------------------\n"
                 )  
 
-        with open("zonaGrupoIncorrecto.log", "w") as archivo:
+        with open("log/zonaGrupoIncorrecto.log", "w") as archivo:
             archivo.write(cadenaEscribir)
             archivo.close()

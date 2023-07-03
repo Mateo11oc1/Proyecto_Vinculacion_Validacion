@@ -6,7 +6,7 @@ import math
 from unidecode import unidecode
 class BaseDatos:
     def __init__(self):
-        self.ruta_access = "./Vinculacion.accdb"
+        self.ruta_access = "source/Vinculacion.accdb"
 
     def crearConexionBDD(self, ruta_access):
         
@@ -147,7 +147,7 @@ class BaseDatos:
         self.cursorBDD.execute("SELECT * FROM calle WHERE nombre LIKE ?", unidecode(str.upper(calle)))
         resultado = self.cursorBDD.fetchone()
         print("\nResultado busqueda: " + str(resultado))
-        
+        self.cerrarConexion()
         return resultado
     
     def ingresarCalle(self, calle: str):
@@ -155,10 +155,12 @@ class BaseDatos:
             self.crearConexionBDD(self.ruta_access)
             self.cursorBDD.execute("INSERT INTO calle (nombre) VALUES (?)", calle)
             self.connBDD.commit()
+            self.cerrarConexion()
         except pyodbc.Error as e:
             print("Erro al ingrear la calle\n")
             print(e)
             self.connBDD.rollback()
+            self.cerrarConexion()
             
     def insercionBDD(self, calles_tramos:dict, columnas_sin_errores: list):
         
