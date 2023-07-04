@@ -1,10 +1,56 @@
-580
-Nombre del archivo: G01_Formulario - Zona 1 - P1.xlsx
-Nombre de la hoja: formulario1
+1
+Nombre del archivo: G29_Formulario_29_RAYOLOMA_FARFAN, GIÑIN.xlsx
+Nombre de la hoja: Formulario 13
 Atractor con problema: Otro Compras Servicios
-Errores: Se han ingresado caracteres
+Errores: La suma de los datos de la jornada es menor al numero de atractores
 
 Tramo: TRAMO 1
-Zona: 1
-Grupo: 1
+Tramo: TRAMO 1
+Zona: Rayoloma
+Grupo: 29
+------------------------------------------------------------------------------------------------------------
+2
+Nombre del archivo: G29_Formulario_29_RAYOLOMA_FARFAN, GIÑIN.xlsx
+Nombre de la hoja: Formulario 14
+Atractor con problema: Veterinaria
+Errores: Hay datos de numero de atractores, jornada o dias pero los datos del tamanio estan vacios
+Hay datos de numero de atractores, tamanio o dias pero los datos de la jornada estan vacios
+
+Tramo: TRAMO 1
+Tramo: TRAMO 1
+Zona: Rayoloma
+Grupo: 29
+------------------------------------------------------------------------------------------------------------
+3
+Nombre del archivo: G29_Formulario_29_RAYOLOMA_FARFAN, GIÑIN.xlsx
+Nombre de la hoja: Formulario 14
+Atractor con problema: Tienda/Minimarket
+Errores: Hay datos de numero de atractores, tamanio o jornada pero los datos de los dias estan vacios
+
+Tramo: TRAMO 1
+Tramo: TRAMO 1
+Zona: Rayoloma
+Grupo: 29
+------------------------------------------------------------------------------------------------------------
+4
+Nombre del archivo: G29_Formulario_29_RAYOLOMA_FARFAN, GIÑIN.xlsx
+Nombre de la hoja: Formulario 18
+Atractor con problema: Tienda/Minimarket
+Errores: Hay datos de numero de atractores, tamanio o dias pero los datos de la jornada estan vacios
+
+Tramo: TRAMO 1
+Tramo: TRAMO 1
+Zona: Rayoloma
+Grupo: 29
+------------------------------------------------------------------------------------------------------------
+5
+Nombre del archivo: G29_Formulario_29_RAYOLOMA_FARFAN, GIÑIN.xlsx
+Nombre de la hoja: Formulario 19
+Atractor con problema: Otro Compras Servicios
+Errores: Hay datos de numero de atractores, jornada o dias pero los datos del tamanio estan vacios
+
+Tramo: TRAMO 1
+Tramo: TRAMO 1
+Zona: Rayoloma
+Grupo: 29
 ------------------------------------------------------------------------------------------------------------
