@@ -48,7 +48,7 @@ class Controlador(QWidget):
             self.modelo = Validaciones()
             self.modelo.leerCarpeta(carpeta)
             mensaje=QMessageBox()
-            mensaje.setText("Cargando datos... Por favor no cierre la ventana principal")
+            mensaje.setText("Cargando datos... Por favor no cierre esta ventana. Presione 'OK' para comenzar")
             mensaje.exec()
             columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas, zona_grupo_vacias = self.modelo.procesar_archivos_excel(1)
             self.llenarTablaErrores(columnasConErrores)
