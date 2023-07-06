@@ -133,7 +133,7 @@ class ManejoCalles:
                 calle_mal={"nombre_archivo": no_conectada["nombre_archivo"], "nombre_hoja": no_conectada["nombre_hoja"], "calle": no_conectada["calle"], "tipo": no_conectada["tipo"]}
                 self.hojasConCallesInvalidas.append(calle_mal)
         
-        self.hojasConCallesInvalidas.extend(self.callesNoConectadas)
+        self.hojasConCallesInvalidas.extend(self.copia)
         
-        print("Calles no conectadas parte 2 "+str(self.callesNoConectadas))
+        print("Calles no conectadas parte 2 "+str(self.copia))
 
