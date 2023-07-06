@@ -79,7 +79,7 @@ class Validaciones:
                             columna = self.validar(columna)
                             
                             if columna != None: #si la columna no esta vacia
-                                print(f'---------\nArchivo: {columna["nombre_archivo"]}\n Hoja: {columna["nombre_hoja"]}\nHoja: {columna["hoja"]}\n Columna: {columna["numColumna"]}\nAtractor: {columna["atractor"]}')
+                                print(f'---------\nArchivo: {columna["nombre_archivo"]}\n Nombre Hoja: {columna["nombre_hoja"]}\nNum Hoja: {columna["hoja"]}\n Columna: {columna["numColumna"]}\nAtractor: {columna["atractor"]}')
                                 self.listaColumnas.append(columna)
                                 valida = 0
                                 for error in columna["listaErrores"].values():

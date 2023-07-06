@@ -33,33 +33,32 @@ class ManejoCalles:
             return {"calle principal":str(hoja.iloc[2,12]), "calles secundarias": calles, "tramo": hoja.iloc[1,12], "nombre_hoja": nombre_hoja, "nombre_archivo": nombre_archivo}
     
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
-    def buscar_direccion(self, direccion, diccionarioCalles):
-        
+    def buscar_direccion(self, direccion, diccionarioCalles, tipo): #tipo es el tipo de calle
         try:
             geolocator = Nominatim(user_agent="proyecto_vinculacion")  # Especifica un nombre de agente personalizado
             location = geolocator.geocode(direccion + ', Cuenca, Ecuador')
             return location
         except GeocoderTimedOut as e:
-            print("Problema de GeocoderTimedOut: ")
+            print("Problema de GeocoderTimedOut: "+direccion+"\n")
             print(e)
-            no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo": diccionarioCalles["tipo"]}
+            no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo": tipo}
             self.callesNoConectadas.append(no_conectada)
             return "problema_conexion"
         except GeocoderUnavailable as e:
-            print("Problema de GeocoderUnavailable: ")
+            print("Problema de GeocoderUnavailable en la calle: "+direccion+"\n")
             print(e)
-            no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo":diccionarioCalles["tipo"]}
+            no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo":tipo}
             self.callesNoConectadas.append(no_conectada)
             
             return "problema_conexion"
 
     def compararCalles(self, callesTramo: dict):
         
-        def buscarCallesSecundarias(listaSecundarias: list, diccionarioCalles):
+        def buscarCallesSecundarias(listaSecundarias: list,diccionarioCalles):
             
             sec_validas = []
             for secundaria in listaSecundarias:
-                location = self.buscar_direccion(secundaria, diccionarioCalles)
+                location = self.buscar_direccion(secundaria, diccionarioCalles, "secundaria")
                 if location is not None and location!="problema_conexion":
                     print("Calle secundaria: ", secundaria)
                     print('Calle de API:', location.address)
@@ -86,7 +85,7 @@ class ManejoCalles:
             return sec_validas
         #------------------------------------------------------------------------------------------------------------------------------------------
 
-        location = self.buscar_direccion(callesTramo["calle principal"], callesTramo)
+        location = self.buscar_direccion(callesTramo["calle principal"], callesTramo, "principal")
     
         if location is not None and location!="problema_conexion":
             print("Calle principal: ", callesTramo["calle principal"])
@@ -119,7 +118,7 @@ class ManejoCalles:
         #volver a intentar conectar las calles
         
         for no_conectada in self.copia:
-            location=self.buscar_direccion(no_conectada["calle"], no_conectada)
+            location=self.buscar_direccion(no_conectada["calle"], no_conectada, no_conectada["tipo"])
             if location is not None and location!="problema_conexion":
                 print("Calle: ", no_conectada["calle"])
                 print('Calle de API:', location.address)
@@ -137,5 +136,4 @@ class ManejoCalles:
         self.hojasConCallesInvalidas.extend(self.callesNoConectadas)
         
         print("Calles no conectadas parte 2 "+str(self.callesNoConectadas))
-        #print("Calles encontradas pero invalidas:"+str(self.hojasConCallesInvalidas))
-        #print("Calles encontradas que han hecho match con la API:"+str(self.callesValidas))
+
