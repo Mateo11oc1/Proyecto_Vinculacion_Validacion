@@ -26,7 +26,7 @@ class GenerarLogs:
                 + "------------------------------------------------------------------------------------------------------------\n"
                 )  
 
-        with open("log/callesInvalidas.log", "w") as archivo:
+        with open("log/callesInvalidas.log", "w",  encoding="utf-8") as archivo:
             archivo.write(cadenaEscribir)
             archivo.close()
     
@@ -52,14 +52,14 @@ class GenerarLogs:
                 + "------------------------------------------------------------------------------------------------------------\n"
                 )
             
-        with open("log/errores.log", "w") as archivo:
+        with open("log/errores.log", "w",  encoding="utf-8") as archivo:
             cont+=1
             archivo.write(cadenaEscribir)
             archivo.close()
 
     def generarArchivoCorreccionesRealizadas(self, nombreCorreccion:str, columna, contador):
 
-        with open("log/correcciones.log", "a") as archivo:
+        with open("log/correcciones.log", "a",  encoding="utf-8") as archivo:
 
             archivo.write(str(contador)+"\n")
             archivo.write("Nombre del archivo: "+ str(columna["nombre_archivo"])+"\n")
@@ -82,7 +82,7 @@ class GenerarLogs:
                 + "------------------------------------------------------------------------------------------------------------\n"
                 )  
 
-        with open("log/formatoIncorrecto.log", "w") as archivo:
+        with open("log/formatoIncorrecto.log", "w",  encoding="utf-8") as archivo:
             archivo.write(cadenaEscribir)
             archivo.close()
 
@@ -102,6 +102,6 @@ class GenerarLogs:
                 + "------------------------------------------------------------------------------------------------------------\n"
                 )  
 
-        with open("log/zonaGrupoIncorrecto.log", "w") as archivo:
+        with open("log/zonaGrupoIncorrecto.log", "w",  encoding="utf-8") as archivo:
             archivo.write(cadenaEscribir)
             archivo.close()

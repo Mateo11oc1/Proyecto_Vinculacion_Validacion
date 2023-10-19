@@ -40,7 +40,7 @@ class BaseDatos:
                 
             return True
         except pyodbc.IntegrityError as e:
-            logging.error("Error al ejecutar la consulta: %s", e)
+            logging.error("La correccion ya ha sido agregada a la Base de Datos: %s", e)
         except pyodbc.Error as e:
             print(datosInsercion)
             # time.sleep(10)
@@ -90,6 +90,8 @@ class BaseDatos:
             almacenarJornada(columna["jornada"])
             almacenarHorario(columna["dias"])
             return True
+        except pyodbc.IntegrityError as e:
+            logging.error("Característica ya almacenada anteriormente en la base de datos: %s", e)
         except pyodbc.Error as e:
             print(datosInsercion)
             # time.sleep(10)
@@ -106,6 +108,8 @@ class BaseDatos:
             self.cursorBDD.execute("INSERT INTO Tramo_atractor_caracteristica (idZona, idTramo, idAtractor, idHorario, idJornada, idTamanio) "+
                                 "VALUES (?, ?, ?, ?, ?, ?)", datosInsercion)
             return True
+        except pyodbc.IntegrityError as e:
+            logging.error("Característica ya almacenada anteriormente en la base de datos: %s", e)
         except pyodbc.Error as e:
             print(datosInsercion)
             # time.sleep(10)
@@ -134,7 +138,8 @@ class BaseDatos:
                     datosInsercion = (columna["zona"], columna["hoja"], idAtractor,1, tam, num)
                     print("Almacenar oferta: " + str(datosInsercion))
                     self.cursorBDD.execute("INSERT INTO oferta (idZona, idTramo, idTipoAtractor, idMotivoAtraccion, tamanio, cantidadAtractores) VALUES (?, ?, ?, ?, ?, ?)", datosInsercion)
-                    
+            except pyodbc.IntegrityError as e:
+                logging.error("Característica ya almacenada anteriormente en la base de datos: %s", e)
             except pyodbc.Error as e:
                 print(datosInsercion)
                 # time.sleep(10)
@@ -156,8 +161,10 @@ class BaseDatos:
             self.cursorBDD.execute("INSERT INTO calle (nombre) VALUES (?)", calle)
             self.connBDD.commit()
             self.cerrarConexion()
+        except pyodbc.IntegrityError as e:
+            logging.error("Calle ya almacenada anteriormente en la base de datos: %s", e)
         except pyodbc.Error as e:
-            print("Erro al ingrear la calle\n")
+            print("Error al ingrear la calle\n")
             print(e)
             self.connBDD.rollback()
             self.cerrarConexion()
@@ -217,7 +224,8 @@ class BaseDatos:
                         hoja = col["hoja"]
                         columnas_sin_errores = [i for i in columnas_sin_errores if i not in borrar]
                         break
-            
+            except pyodbc.IntegrityError as e:
+                logging.error("Tramo ya almacenado anteriormente en la base de datos: %s", e)
             except pyodbc.Error as e:
                 print("Se hara rollback debido a un error en ingresar tramo")
                 print(e)
@@ -265,7 +273,8 @@ class BaseDatos:
                             self.cursorBDD.execute("INSERT INTO error_detalle (idError, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
                             
                             self.connBDD.commit()
-                        
+            except pyodbc.IntegrityError as e:
+                logging.error("Error ya almacenado anteriormente en la base de datos: %s", e)            
             except pyodbc.Error as e:
                 logging.error("Error: %s", e)
                 self.connBDD.rollback()
@@ -304,6 +313,8 @@ class BaseDatos:
             self.cursorBDD.execute("INSERT INTO correccion_detalle (idCorreccion, nombreArchivo, nombreHoja, atractor) VALUES(?, ?, ?, ?)", datosInsercion)
                         
             self.connBDD.commit()
+        except pyodbc.IntegrityError as e:
+            logging.error("Correccion ya almacenada anteriormente en la base de datos: %s", e)
         except pyodbc.Error as e:
             print(datosInsercion)
             # time.sleep(10)
@@ -326,7 +337,9 @@ class BaseDatos:
                 print(datosInsercion)
                 self.cursorBDD.execute("INSERT INTO FormatoIncorrecto (id, nombreArchivo, nombreHoja) VALUES(?, ?, ?)", datosInsercion)
                 self.connBDD.commit()
-                iterador+=1        
+                iterador+=1      
+            except pyodbc.IntegrityError as e:
+                logging.error("Hoja con formato incorrecto ya almacenada anteriormente en la base de datos: %s", e)  
             except pyodbc.Error as e:
                 logging.error("Error: %s", e)
                 self.connBDD.rollback()
@@ -352,6 +365,8 @@ class BaseDatos:
                 self.cursorBDD.execute("INSERT INTO ZonaOGrupoIncorrectos (id, nombreArchivo, nombreHoja, zona, grupo, errores) VALUES(?, ?, ?, ?, ?, ?)", datosInsercion)
                 self.connBDD.commit()
                 iterador+=1
+            except pyodbc.IntegrityError as e:
+                logging.error("Error ya almacenado anteriormente en la base de datos: %s", e)
             except pyodbc.Error as e:
                 logging.error("Error: %s", e)
                 self.connBDD.rollback()
@@ -376,6 +391,8 @@ class BaseDatos:
                 self.cursorBDD.execute("INSERT INTO callesNoReconocidas (id, nombreArchivo, nombreHoja, calle, tipoCalle) VALUES(?, ?, ?, ?, ?)", datosInsercion)
                 self.connBDD.commit()
                 iterador+=1
+            except pyodbc.IntegrityError as e:
+                logging.error("Calle no reconocida ya almacenada anteriormente en la base de datos: %s", e)
             except pyodbc.Error as e:
                 logging.error("Error: %s", e)
                 self.connBDD.rollback()

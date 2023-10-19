@@ -108,7 +108,7 @@ class Validaciones:
             except Exception as e:
                 print(f"Ocurrio una excepcion:", str(e))
                 traceback.print_exc()
-                #time.sleep(5)
+                
         
         
         self.ingresoBDD(opcion)
@@ -261,6 +261,8 @@ class Validaciones:
             self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha escrito el total(sumando los tamanios) de atractores en # Atractores porque era un campo vacío", columna, self.contadorCorrecciones)
             self.baseDatos.almacenarCorreccionesBDD("Se ha escrito el número de atractores en #Atractores", columna)
             columna["listaCorrecciones"][1] = True
+            columna["listaErrores"][2] = False #como ya se ha realizado la correccion ya no se presenta el error 2 ni 3 
+            columna["listaErrores"][3]=False
 
 
     #Valida que los datos de jornada, no estan vacios
@@ -506,6 +508,7 @@ class Validaciones:
                     self.validarViviendas(caracteres[0])
                     return caracteres[0]
                 else:
+                
                     tamanio = self.validarTamanioDatosVacios(caracteres[0])
                     if tamanio[1]:
                         #si no hay datos en tamanio no es necesario realizar las otras validacions del tamanio, por lo cual
@@ -524,19 +527,22 @@ class Validaciones:
                     if jornada[1]:
                         #si no hay datos en jornada no es necesario realizar las otras validacions de la jornada, por lo cual
                         #se ponen las validaciones en False porque no presentaran ese error en concreto
+                        
                         jornada[0]["listaErrores"][5] = False
                         jornada[0]["listaErrores"][6] = False
                         col2 = jornada[0]
                     else:
                         col1 = self.validarSumaJornada(jornada[0])
                         col2 = self.validarJornadaNoSobrepaseAtractores(col1[0])[0]
-                        self.corregirDiurno(col2) #Se comento porque es muy demorado
+                        self.corregirDiurno(col2)
+                        
                     
 
                     dias = self.validarDiasDatosVacios(col2)
                     if dias[1]:
                         #si no hay datos en dias no es necesario realizar las otras validacions de los dias, por lo cual
                         #se ponen las validaciones en False porque no presentaran ese error en concreto
+                
                         dias[0]["listaErrores"][8] = False
                         dias[0]["listaErrores"][9] = False
                         colRetorno = dias[0]
