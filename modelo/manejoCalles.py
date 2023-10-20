@@ -4,6 +4,7 @@ from unidecode import unidecode
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 from modelo.OperacionesBDD import BaseDatos
+import pandas as pd
 class ManejoCalles:
     def __init__(self):
         self.baseDatos=BaseDatos()
@@ -13,25 +14,38 @@ class ManejoCalles:
         self.calles_tramos = []
 
     def almacenarCalles_Tramo(self, hoja, nombre_archivo, nombre_hoja):
-        calles_secundarias=str(hoja.iloc[3,14])
+        calles = [] 
+        principal=""
+        calles_secundarias=[]
+        if not pd.isna(hoja.iloc[3,14]) and hoja.iloc[3,14]!='':
+            calles_secundarias=str(hoja.iloc[3,14])
         # Eliminar la cadena "S/N" de calles_secundarias porque / es un separador de calles y podria confundir a N como una calle y a S como otra
-        calles_secundarias = calles_secundarias.replace("S/N", "")
+            calles_secundarias = calles_secundarias.replace("S/N", "").replace("s/n", "")
         #para separar las calles se consideran los siguientes separadores
         # si hay una  " y ", " Y " , " entre ", " Entre ", "e", "E", "ENTRE" que separe las calles
         # separaciones por guiones -, por amperson &, por slash /
         #separar por numeros con punto 1. 2. o numero seguido de ) 1) 2)
-        separadores=[r'\by\b',r'\be\b',r'\bE\b', r'\bENTRE\b', r'\s*,\s*', r'\s*-\s*', r'\s*&\s*',  r'\d\.', r'\s*/\s*', r'\bentre\b', r'\bY\b', r'\d+\)', r'\bEntre\b']
-        patron='|'.join(separadores) #une los separadores para dividir las calles si se cumple cualquier a de los patrones especificados 
+            separadores=[r'\by\b',r'\be\b',r'\bE\b', r'\bENTRE\b', r'\s*,\s*', r'\s*-\s*', r'\s*&\s*',  r'\d\.', r'\s*/\s*', r'\bentre\b', r'\bY\b', r'\d+\)', r'\bEntre\b']
+            patron='|'.join(separadores) #une los separadores para dividir las calles si se cumple cualquier a de los patrones especificados 
         #patron contiene \by\b|\s*,\s*|\s*-\s*|\s*&\s*|\d\.|\s*\/\s*
-        calles = [] 
         #si es que no esta vacia la celda de calles secundarias 
-        if calles_secundarias!=None:
-            calles=re.split(patron, str(calles_secundarias))
+            if calles_secundarias!=None:
+                calles=re.split(patron, str(calles_secundarias))
             # Eliminar espacios en blanco al inicio y al final de cada calle
-            calles = [calle.strip() for calle in calles if calle and calle.strip()]  
+                calles = [calle.strip() for calle in calles if calle and calle.strip()] 
             
-            return {"calle principal":str(hoja.iloc[2,12]), "calles secundarias": calles, "tramo": hoja.iloc[1,12], "nombre_hoja": nombre_hoja, "nombre_archivo": nombre_archivo}
-    
+        else:
+            calles.append("vacia")
+            
+
+        if not pd.isna(hoja.iloc[2,12]) and hoja.iloc[2,12]!='':
+            principal=str(hoja.iloc[2,12]).replace("S/N", "").replace("s/n","")
+            
+        else:
+            principal="vacia"
+
+        return {"calle principal":principal, "calles secundarias": calles, "tramo": hoja.iloc[1,12], "nombre_hoja": nombre_hoja, "nombre_archivo": nombre_archivo}
+        
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
     def buscar_direccion(self, direccion, diccionarioCalles, tipo): #tipo es el tipo de calle
         try:
@@ -39,14 +53,15 @@ class ManejoCalles:
             location = geolocator.geocode(direccion + ', Cuenca, Ecuador')
             return location
         except GeocoderTimedOut as e:
-            print("Problema de GeocoderTimedOut: "+direccion+"\n")
-            print(e)
+            print("Se ha excedido el tiempo de busqueda con la calle "+direccion)
+            #print("Problema de GeocoderTimedOut: "+direccion+"\n")
+            #print(e)
             no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo": tipo}
             self.callesNoConectadas.append(no_conectada)
             return "problema_conexion"
         except GeocoderUnavailable as e:
-            print("Problema de GeocoderUnavailable en la calle: "+direccion+"\n")
-            print(e)
+            print("No se encontro la calle: "+direccion+"\n")
+            #print(e)
             no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo":tipo}
             self.callesNoConectadas.append(no_conectada)
             
