@@ -48,33 +48,36 @@ class ManejoCalles:
         
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
     def buscar_direccion(self, direccion, diccionarioCalles, tipo): #tipo es el tipo de calle
-        try:
-            geolocator = Nominatim(user_agent="proyecto_vinculacion")  # Especifica un nombre de agente personalizado
-            location = geolocator.geocode(direccion + ', Cuenca, Ecuador')
-            return location
-        except GeocoderTimedOut as e:
-            print("Se ha excedido el tiempo de busqueda con la calle "+direccion)
-            #print("Problema de GeocoderTimedOut: "+direccion+"\n")
-            #print(e)
-            no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo": tipo}
-            self.callesNoConectadas.append(no_conectada)
-            return "problema_conexion"
-        except GeocoderUnavailable as e:
-            print("No se encontro la calle: "+direccion+"\n")
-            #print(e)
-            no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo":tipo}
-            self.callesNoConectadas.append(no_conectada)
-            
-            return "problema_conexion"
+        if direccion!="vacia":
+            try:
+                geolocator = Nominatim(user_agent="proyecto_vinculacion")  # Especifica un nombre de agente personalizado
+                location = geolocator.geocode(direccion + ', Cuenca, Ecuador')
+                return location
+            except GeocoderTimedOut as e:
+                print("Se ha excedido el tiempo de busqueda con la calle "+direccion)
+                #print("Problema de GeocoderTimedOut: "+direccion+"\n")
+                #print(e)
+                no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo": tipo}
+                self.callesNoConectadas.append(no_conectada)
+                return "problema_conexion"
+            except GeocoderUnavailable as e:
+                print("No se encontro la calle: "+direccion+"\n")
+                #print(e)
+                no_conectada={"nombre_archivo": diccionarioCalles["nombre_archivo"], "nombre_hoja": diccionarioCalles["nombre_hoja"], "calle": direccion, "tipo":tipo}
+                self.callesNoConectadas.append(no_conectada)
+                
+                return "problema_conexion"
+        else:
+            return "vacia"
 
     def compararCalles(self, callesTramo: dict):
         
         def buscarCallesSecundarias(listaSecundarias: list,diccionarioCalles):
-            
+            location="vacia"
             sec_validas = []
             for secundaria in listaSecundarias:
                 location = self.buscar_direccion(secundaria, diccionarioCalles, "secundaria")
-                if location is not None and location!="problema_conexion":
+                if location is not None and location!="problema_conexion" and location!="vacia":
                     print("Calle secundaria: ", secundaria)
                     print('Calle de API:', location.address)
                     print('Latitud:', location.latitude)
@@ -102,7 +105,7 @@ class ManejoCalles:
 
         location = self.buscar_direccion(callesTramo["calle principal"], callesTramo, "principal")
     
-        if location is not None and location!="problema_conexion":
+        if location is not None and location!="problema_conexion" and location!="vacia":
             print("Calle principal: ", callesTramo["calle principal"])
             print('Calle de API:', location.address)
             print('Latitud:', location.latitude)

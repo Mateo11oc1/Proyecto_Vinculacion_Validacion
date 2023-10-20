@@ -96,10 +96,10 @@ class Validaciones:
                                     if correccion:
                                         self.columnasConCorrecciones.append(columna)
                                         break
-                        #try:
-                        calles = self.manejoCalles.compararCalles(self.manejoCalles.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))      
-                        #except Exception as e:
-                            #print(str(e))
+                        try:
+                            calles = self.manejoCalles.compararCalles(self.manejoCalles.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))      
+                        except Exception as e:
+                            print(str(e))
                         self.manejoCalles.calles_tramos.append({**{"zona":columnaInsercion["zona"], "tramo":columnaInsercion["hoja"], "nombreTramo":columnaInsercion["tramo"]}, **calles})
                     else:
                         malformato={"nombre_archivo":os.path.basename(i),"nombre_hoja": nombreHoja }

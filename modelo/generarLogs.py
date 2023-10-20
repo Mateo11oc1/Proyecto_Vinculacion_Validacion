@@ -96,7 +96,7 @@ class GenerarLogs:
             cadenaEscribir = (
                 cadenaEscribir + str(cont)+"\n" + "Nombre del archivo: "+ str(hoja["nombre_archivo"])+"\n" 
                 + "Nombre de la hoja: " + str(hoja["nombre_hoja"])
-                +"Errores:" + str(hoja["errores"])+"\n" 
+                +"\nErrores:" + str(hoja["errores"])+"\n" 
                 +"Zona:" + str(hoja["zona"])+"\n" 
                 +"Grupo:" + str(hoja["grupo"])+"\n" 
                 + "------------------------------------------------------------------------------------------------------------\n"
