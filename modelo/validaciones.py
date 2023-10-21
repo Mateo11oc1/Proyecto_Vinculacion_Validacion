@@ -42,12 +42,13 @@ class Validaciones:
                 print("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
                 return True
         except IndexError as e:
-            print(str(e))
+            print("Error de formato en la hoja "+nombre_hoja+" del archivo "+os.path.basename(nombre_archivo)+"\n")
+            #print(str(e))
             return True  #si se produce una excepcion es porque no se pudo acceder a una de las celdas, se retorna True porque significa que la celda esta vacia y tiene mal formato
 
     
     #opcion es para ver si se ha seleccionado un solo archivo(1) o una carpeta(2), este metodo es llamado desde el controlador
-    def procesar_archivos_excel(self, opcion):
+    def procesar_archivos_excel(self, opcion, validarCalles:bool):
         self.listaFormatoIncorrecto=[]
         self.listaColumnas = []
         self.columnasConErrores = []
@@ -58,7 +59,7 @@ class Validaciones:
         for i in self.archivos_excel:
             
             try:
-                #Leo todas las hojas de una vez del documento
+            #Leo todas las hojas de una vez del documento
                 leido = pandas.read_excel(i, sheet_name = None)
                 numHoja = 1
                 #Recorro cada hoja del archivo
@@ -96,11 +97,12 @@ class Validaciones:
                                     if correccion:
                                         self.columnasConCorrecciones.append(columna)
                                         break
-                        try:
-                            calles = self.manejoCalles.compararCalles(self.manejoCalles.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))      
-                        except Exception as e:
-                            print(str(e))
-                        self.manejoCalles.calles_tramos.append({**{"zona":columnaInsercion["zona"], "tramo":columnaInsercion["hoja"], "nombreTramo":columnaInsercion["tramo"]}, **calles})
+                        if validarCalles==True:
+                            try:
+                                calles = self.manejoCalles.compararCalles(self.manejoCalles.almacenarCalles_Tramo(hoja, os.path.basename(i), nombreHoja))      
+                            except Exception as e:
+                                print(str(e))
+                            self.manejoCalles.calles_tramos.append({**{"zona":columnaInsercion["zona"], "tramo":columnaInsercion["hoja"], "nombreTramo":columnaInsercion["tramo"]}, **calles})
                     else:
                         malformato={"nombre_archivo":os.path.basename(i),"nombre_hoja": nombreHoja }
                         self.listaFormatoIncorrecto.append(malformato)
@@ -111,7 +113,7 @@ class Validaciones:
                 
         
         
-        self.ingresoBDD(opcion)
+        self.ingresoBDD(opcion, validarCalles)
         self.manejoCalles.reintentarConectarCalles()
         self.baseDatos.almacenarTodosLosErrores(self.columnasConErrores, self.listaFormatoIncorrecto, self.listaZonaOGrupoNan, self.manejoCalles.hojasConCallesInvalidas)
         self.generarLogs.generarArchivosLog(self.columnasConErrores, self.listaFormatoIncorrecto, self.manejoCalles.hojasConCallesInvalidas, self.listaZonaOGrupoNan)   #genera archivos logs que contienen la misma informacion de la interfaz
@@ -120,10 +122,12 @@ class Validaciones:
 
 
     #metodo con el cual se llama a ingresar toda la informacion de zona, tramo, calles, atractores, tamanio, jornada
-    def ingresoBDD(self, opcion):
-        if len(self.columnasConErrores) == 0 and len(self.manejoCalles.hojasConCallesInvalidas) == 0 and len(self.listaFormatoIncorrecto) == 0 and opcion == 1:
+    def ingresoBDD(self, opcion, se_validaron_Calles):
+        if se_validaron_Calles:
+            if len(self.columnasConErrores) == 0 and len(self.manejoCalles.hojasConCallesInvalidas) == 0 and len(self.listaFormatoIncorrecto) == 0 and opcion == 1:
+            
+                self.baseDatos.insercionBDD(self.manejoCalles.calles_tramos, self.columnasSinErrores)
         
-            self.baseDatos.insercionBDD(self.manejoCalles.calles_tramos, self.columnasSinErrores)
     
 
     def verObservacionesArchivos(self)->list:
@@ -243,20 +247,26 @@ class Validaciones:
         #si el numero de atractores es nulo
 
         if math.isnan(columna["numAtractores"]):
-            print("Corrigiendo numero de atractores...")
-            
             # abre la aplicación de Excel en segundo plano
-            app = xlwings.App(visible=False)            
+            app = xlwings.App(visible=False)   
+            try:
+                
             # abrir el archivo
-            wb = xlwings.Book(columna["archivoRuta"])
+                wb = xlwings.Book(columna["archivoRuta"])
+                
+                
+            except Exception as e:
+                print("No se pudo realizar la correccion porque el archivo esta danado")
+                return
             # seleccionar la hoja
             hoja = wb.sheets[columna["nombre_hoja"]]
-            # modificar el valor de una celda
+                # modificar el valor de una celda
             hoja.cells(11, columna["numColumna"]+1).value = sum(x for x in columna['tamanio'] if not math.isnan(x))
             # guarda los cambios y cierra excel
             wb.save()
             wb.close()
             app.quit()
+            print("Corrigiendo numero de atractores...")
             self.contadorCorrecciones+=1
             self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha escrito el total(sumando los tamanios) de atractores en # Atractores porque era un campo vacío", columna, self.contadorCorrecciones)
             self.baseDatos.almacenarCorreccionesBDD("Se ha escrito el número de atractores en #Atractores", columna)
@@ -316,14 +326,18 @@ class Validaciones:
         if not math.isnan(sum(x for x in columna["jornada"] if not math.isnan(x))):
                 
             if not math.isnan(columna["jornada"][0]) and not math.isnan(columna["jornada"][1]) and columna["jornada"][0] == columna["numAtractores"] and columna["jornada"][1] == columna["numAtractores"]:
-                print("Corrigiendo diurno...")
+                
 
                 # abre la aplicación de Excel en segundo plano
                 app = xlwings.App(visible=False)
 
                 # abrir el archivo
-                wb = xlwings.Book(columna["archivoRuta"])
-
+                try:
+                    wb = xlwings.Book(columna["archivoRuta"])
+                    
+                except Exception as e:
+                    print("\nNo se puede realizar la correccion de diurno porque el archivo esta dañado")
+                    return
                 # seleccionar la hoja
                 hoja = wb.sheets[columna["nombre_hoja"]]
 
@@ -336,7 +350,7 @@ class Validaciones:
                 wb.save()
                 wb.close()
                 app.quit()
-
+                print("Corrigiendo diurno...")
                 self.contadorCorrecciones+=1
                 self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna, self.contadorCorrecciones)
                 self.baseDatos.almacenarCorreccionesBDD("Se ha cambiado los datos de #vespertino y #matutino por #diurno", columna)
@@ -391,14 +405,16 @@ class Validaciones:
             #si la lista de dias de las posiciones 1 al 5 que contiene los datos de lunes, martes, miercoles jueves y viernes
             #es igual al numero de atractores
             if all(dia == columna["numAtractores"]  for dia in columna["dias"][:5]) and all(math.isnan(dia) for dia in columna["dias"][5:]):
-                print("Corrigiendo entre semana...")
+                
                             
                 # abre la aplicación de Excel en segundo plano
                 app = xlwings.App(visible=False)
-                
+                try:
                 # abrir el archivo
-                wb = xlwings.Book(columna["archivoRuta"])
-
+                    wb = xlwings.Book(columna["archivoRuta"])
+                except Exception as e:
+                    print("\nNo se puede realizar la correccion de entre semana porque el archivo esta dañado")
+                    return
                 # seleccionar la hoja
                 hoja = wb.sheets[columna["nombre_hoja"]]
 
@@ -414,7 +430,7 @@ class Validaciones:
                 wb.save()
                 wb.close()
                 app.quit()
-
+                print("Corrigiendo entre semana...")
                 self.contadorCorrecciones+=1
                 self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna, self.contadorCorrecciones)
                 self.baseDatos.almacenarCorreccionesBDD("Se ha cambiado #lunes, #martes, #miercoles, #jueves, #viernes por #entre semana", columna)
@@ -432,13 +448,18 @@ class Validaciones:
         
         validado = validar(columna)
         if not validado[0]:
-            print("Corrigiendo viviendas...")
+            
                             
             # abre la aplicación de Excel en segundo plano
             app = xlwings.App(visible=False)
-            
+            try:
             # abrir el archivo
-            wb = xlwings.Book(columna["archivoRuta"])
+                wb = xlwings.Book(columna["archivoRuta"])
+
+                
+            except Exception as e:
+                print("No se pudo corregir la vivienda porque el archivo esta dando")
+                return
 
             # seleccionar la hoja
             hoja = wb.sheets[columna["nombre_hoja"]]
@@ -452,7 +473,7 @@ class Validaciones:
             wb.save()
             wb.close()
             app.quit()
-
+            print("Corrigiendo viviendas...")
             self.contadorCorrecciones+=1
             self.generarLogs.generarArchivoCorreccionesRealizadas("Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", columna, self.contadorCorrecciones)
             self.baseDatos.almacenarCorreccionesBDD("Se ha modificado el número de atractores en el motivo Vivienda ya que se encontraba en filas inferiores", 
@@ -505,6 +526,7 @@ class Validaciones:
                 #las columnas 53 y 54 corresponden a Vivienda de la cual no es necesario especificar tamanio, jornada
                 #ni dias por lo cual solo se debe validar que no hayan caracteres
                 if caracteres[0]["numColumna"]>=53:
+                    
                     self.validarViviendas(caracteres[0])
                     return caracteres[0]
                 else:
@@ -520,8 +542,11 @@ class Validaciones:
                         #verificar que la suma de los tamanios sea igual al numero de atractores
                         sumTamanio = self.validarSumaTamanio(tamanio[0])
                         caracteres[0] = sumTamanio[0]
-                        self.modificarCampoNAtractores(sumTamanio[0])
-
+                        try:
+                            self.modificarCampoNAtractores(sumTamanio[0])
+                        
+                        except Exception as e:
+                            print("\nNo se puede realizar la correccion de #Atractores porque el archivo esta dañado")
 
                     jornada = self.validarJornadaDatosVacios(caracteres[0])
                     if jornada[1]:
@@ -534,9 +559,10 @@ class Validaciones:
                     else:
                         col1 = self.validarSumaJornada(jornada[0])
                         col2 = self.validarJornadaNoSobrepaseAtractores(col1[0])[0]
+                        
                         self.corregirDiurno(col2)
                         
-                    
+                            
 
                     dias = self.validarDiasDatosVacios(col2)
                     if dias[1]:
@@ -549,6 +575,8 @@ class Validaciones:
                     else:
                         colDias = self.validarDiasNoSobrepaseAtractores(dias[0])
                         colRetorno = self.validarSumaDias(colDias[0])[0]
+                        
                         self.corregirEntreSemana(colRetorno)
-
+                        
+                            
         return colRetorno

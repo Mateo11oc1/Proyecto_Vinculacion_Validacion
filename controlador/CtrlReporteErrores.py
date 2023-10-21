@@ -50,11 +50,20 @@ class Controlador(QWidget):
             mensaje=QMessageBox()
             mensaje.setText("Cargando datos... Por favor no cierre esta ventana. Presione 'OK' para comenzar")
             mensaje.exec()
-            columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas, zona_grupo_vacias = self.modelo.procesar_archivos_excel(1)
+            confirmar="¿Desea que tambien se realice una comprobación de las calles de los archivos?"
+            respuesta = QMessageBox.question(self, "Confirmación", confirmar, QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+            #si la respuesta es que si
+            if respuesta == 16384:
+                columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas, zona_grupo_vacias = self.modelo.procesar_archivos_excel(1, True)
+                self.llenarTablaCallesMalEscritas(calles_invalidas)
+            else:
+                columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas, zona_grupo_vacias = self.modelo.procesar_archivos_excel(1, False)
+
+
             self.llenarTablaErrores(columnasConErrores)
             self.llenarTablaCorrecciones(columnasConCorrecciones)
             self.llenarTablaMalFormato(hojas_mal_formato)
-            self.llenarTablaCallesMalEscritas(calles_invalidas)
+            
             self.llenarTablaZonaGrupoVacios(zona_grupo_vacias)
             self.avisoPorVoz()
 
@@ -261,11 +270,18 @@ class Controlador(QWidget):
             self.modelo = Validaciones()
             self.setCabecerasTablaErrores()
             self.modelo.archivos_excel = [archivo]
-            columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas, zona_grupo_vacias = self.modelo.procesar_archivos_excel(2)
+            confirmar="¿Desea que tambien se realice una comprobación de las calles de los archivos?"
+            respuesta = QMessageBox.question(self, "Confirmación", confirmar, QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+            #si la respuesta es que si
+            if respuesta == 16384:
+                columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas, zona_grupo_vacias = self.modelo.procesar_archivos_excel(2, True)
+                self.llenarTablaCallesMalEscritas(calles_invalidas)
+            else:
+                columnasConErrores, columnasConCorrecciones, hojas_mal_formato, calles_invalidas, zona_grupo_vacias = self.modelo.procesar_archivos_excel(2, False)
+
             self.llenarTablaErrores(columnasConErrores)
             self.llenarTablaCorrecciones(columnasConCorrecciones)
             self.llenarTablaMalFormato(hojas_mal_formato)
-            self.llenarTablaCallesMalEscritas(calles_invalidas)
             self.llenarTablaZonaGrupoVacios(zona_grupo_vacias)
             self.avisoPorVoz()
         
